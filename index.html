@@ -9,197 +9,129 @@
   <body>
     <header class="hero">
       <h1>Configuración académica de horarios</h1>
-      <p>
-        Coordina carreras, coordinaciones, materias, docentes, turnos, bloques y recesos desde
-        una única interfaz.
-      </p>
-      <button id="btnConfiguracion" type="button" class="hero-config-btn">Configuración</button>
-      <nav id="menuConfiguracion" class="menu-configuracion" aria-label="Áreas con configuración">
-        <a href="#areaGeneral">Configuración general</a>
-        <a href="#areaMaterias">Materias por CSV</a>
-        <a href="#areaDocentes">Docentes y categorías</a>
-        <a href="#areaHorario">Turno y reglas horarias</a>
-        <a href="#areaMatricula">Matrícula</a>
-      </nav>
+      <p>Organiza la parte principal y la configuración desde pestañas separadas.</p>
     </header>
 
     <main class="layout">
-      <section class="card" id="areaGeneral">
-        <h2>1) Configuración general académica</h2>
-        <form id="generalForm" class="stacked-form">
-          <div class="grid-2">
-            <label>
-              Nombre de la coordinación
-              <input type="text" id="nombreCoordinacion" required placeholder="Ej: Coordinación de Ingeniería" />
-            </label>
-            <label>
-              Nombre de la carrera
-              <input type="text" id="nombreCarrera" required placeholder="Ej: Ingeniería en Sistemas" />
-            </label>
-          </div>
-          <button type="submit">Registrar coordinación y carrera</button>
-        </form>
+      <nav class="tabs" aria-label="Secciones principales">
+        <button class="tab-btn active" type="button" data-tab="principal">Parte principal</button>
+        <button class="tab-btn" type="button" data-tab="configuracion">Configuración</button>
+      </nav>
+
+      <section id="tab-principal" class="tab-panel active">
+        <section class="card">
+          <h2>Generar horario</h2>
+          <p class="hint">Solo selecciona coordinación y carrera para iniciar el horario.</p>
+          <form id="seleccionForm" class="stacked-form">
+            <div class="grid-2">
+              <label>
+                Coordinación
+                <select id="coordinacionPrincipal" required>
+                  <option value="">Selecciona una coordinación</option>
+                  <option value="AQT">AQT</option>
+                </select>
+              </label>
+              <label>
+                Carrera
+                <select id="carreraPrincipal" required>
+                  <option value="">Selecciona una carrera</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit">Usar selección</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Cantidad de estudiantes por carrera (período activo)</h2>
+          <form id="matriculaForm" class="stacked-form">
+            <div class="grid-2">
+              <label>
+                Carrera
+                <select id="carreraMatricula" required>
+                  <option value="">Selecciona una carrera</option>
+                </select>
+              </label>
+              <label>
+                Cantidad de estudiantes
+                <input type="number" id="cantidadEstudiantes" min="1" required placeholder="Ej: 120" />
+              </label>
+            </div>
+            <button type="submit">Guardar cantidad</button>
+          </form>
+          <ul id="listaMatricula" class="simple-list"></ul>
+        </section>
       </section>
 
-      <section class="card" id="areaMaterias">
-        <h2>2) Carga de materias por CSV</h2>
-        <p class="hint">Formato esperado: <code>clase,año,credito,categoria</code></p>
-        <label>
-          Pega el CSV
-          <textarea
-            id="csvInput"
-            rows="6"
-            placeholder="Programación I,1,4,Desarrollo\nCálculo I,1,4,Matemática"
-          ></textarea>
-        </label>
-        <button id="btnProcesarCsv" type="button">Procesar CSV</button>
-        <div id="materiasPreview" class="table-wrap"></div>
-      </section>
+      <section id="tab-configuracion" class="tab-panel">
+        <section class="card">
+          <h2>Configurar turnos</h2>
+          <form id="turnoForm" class="stacked-form">
+            <div class="grid-2">
+              <label>
+                Turno
+                <select id="nombreTurno" required>
+                  <option value="">Selecciona un turno</option>
+                  <option>Diurno</option>
+                  <option>Sabatino</option>
+                  <option>Dominical</option>
+                </select>
+              </label>
+              <label>
+                Días hábiles por turno (separados por coma)
+                <input type="text" id="diasTurno" required placeholder="Lunes,Martes,Miércoles" />
+              </label>
+            </div>
+            <div class="grid-3">
+              <label>
+                Duración del bloque (min)
+                <input type="number" id="duracionBloque" min="1" required />
+              </label>
+              <label>
+                Crédito por bloque
+                <input type="number" id="creditoBloque" min="1" required />
+              </label>
+              <label>
+                Máximo de bloques por día
+                <input type="number" id="maxBloquesDia" min="1" required />
+              </label>
+            </div>
+            <button type="submit">Guardar turno</button>
+          </form>
+          <ul id="listaTurnos" class="simple-list"></ul>
+        </section>
 
-      <section class="card" id="areaDocentes">
-        <h2>3) Configuración de docentes y categorías</h2>
-        <form id="docenteForm" class="stacked-form">
-          <div class="grid-2">
+        <section class="card">
+          <h2>Nueva área académica</h2>
+          <form id="areaForm" class="stacked-form">
             <label>
-              Nombre del maestro
+              Nombre del área
+              <input type="text" id="nombreArea" required placeholder="Ej: Ciencias básicas o Tecnología" />
+            </label>
+            <button type="submit">Agregar área</button>
+          </form>
+          <ul id="listaAreas" class="simple-list"></ul>
+        </section>
+
+        <section class="card">
+          <h2>Nuevo docente</h2>
+          <form id="docenteForm" class="stacked-form">
+            <label>
+              Nombre del docente
               <input type="text" id="nombreDocente" required placeholder="Ej: Ana López" />
             </label>
             <label>
-              Especialidades / categorías (separadas por coma)
-              <input
-                type="text"
-                id="especialidades"
-                required
-                placeholder="Ej: Desarrollo, Matemática"
-              />
+              Áreas que se le pueden asignar (separadas por coma)
+              <input type="text" id="areasDocente" required placeholder="Ciencias básicas,Tecnología" />
             </label>
-          </div>
-          <button type="submit">Registrar maestro</button>
-        </form>
-
-        <form id="categoriaForm" class="stacked-form with-top-border">
-          <div class="grid-2">
-            <label>
-              Categoría
-              <input type="text" id="categoriaNombre" required placeholder="Ej: Desarrollo" />
-            </label>
-            <label>
-              Nombre del maestro
-              <select id="docenteCategoria" required>
-                <option value="">Selecciona un maestro</option>
-              </select>
-            </label>
-          </div>
-          <button type="submit">Asignar categoría</button>
-        </form>
-
-        <div class="grid-2">
-          <div>
-            <h3>Maestros registrados</h3>
-            <ul id="listaDocentes" class="simple-list"></ul>
-          </div>
-          <div>
-            <h3>Categorías asignadas</h3>
-            <ul id="listaCategorias" class="simple-list"></ul>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" id="areaHorario">
-        <h2>4) Configuración de turno y reglas horarias</h2>
-        <form id="turnoForm" class="stacked-form">
-          <div class="grid-2">
-            <label>
-              Nombre del turno
-              <input type="text" id="nombreTurno" required placeholder="Ej: Diurno" />
-            </label>
-            <label>
-              Días del turno (separados por coma)
-              <input type="text" id="diasTurno" required placeholder="Lunes,Martes,Miércoles" />
-            </label>
-          </div>
-          <label>
-            Prioridad por día (formato Día:Prioridad, separado por coma)
-            <input
-              type="text"
-              id="prioridadDia"
-              required
-              placeholder="Lunes:1,Martes:2,Miércoles:3"
-            />
-          </label>
-          <button type="submit">Guardar turno</button>
-        </form>
-
-        <form id="bloqueForm" class="stacked-form with-top-border">
-          <div class="grid-2">
-            <label>
-              Crédito por bloque
-              <input type="number" id="creditoBloque" min="1" required />
-            </label>
-            <label>
-              Minutos por bloque
-              <input type="number" id="minutosBloque" min="1" required />
-            </label>
-          </div>
-          <button type="submit">Guardar bloques</button>
-        </form>
-
-        <form id="recesoForm" class="stacked-form with-top-border">
-          <h3>Receso y almuerzo</h3>
-          <div class="grid-2">
-            <label>
-              Receso inicio
-              <input type="time" id="recesoInicio" required />
-            </label>
-            <label>
-              Receso fin
-              <input type="time" id="recesoFin" required />
-            </label>
-            <label>
-              Almuerzo inicio
-              <input type="time" id="almuerzoInicio" required />
-            </label>
-            <label>
-              Almuerzo fin
-              <input type="time" id="almuerzoFin" required />
-            </label>
-          </div>
-          <button type="submit">Guardar recesos</button>
-        </form>
+            <button type="submit">Registrar docente</button>
+          </form>
+          <ul id="listaDocentes" class="simple-list"></ul>
+        </section>
       </section>
 
       <section class="card">
-        <h2>5) Aplicar configuración por área</h2>
-        <p class="hint">Cada botón aplica la configuración para su área correspondiente.</p>
-        <div class="actions-grid">
-          <button id="btnAplicarGeneral" type="button">Aplicar área general</button>
-          <button id="btnAplicarMaterias" type="button">Aplicar área de materias</button>
-          <button id="btnAplicarDocentes" type="button">Aplicar área de docentes y categorías</button>
-          <button id="btnAplicarHorario" type="button">Aplicar área de horario</button>
-        </div>
-      </section>
-
-      <section class="card" id="areaMatricula">
-        <h2>6) Matrícula</h2>
-        <p class="hint">Selecciona la coordinación y carrera registradas en configuración general.</p>
-        <div class="grid-2">
-          <label>
-            Coordinación disponible
-            <select id="coordinacionMatricula">
-              <option value="">Selecciona una coordinación</option>
-            </select>
-          </label>
-          <label>
-            Carrera asociada
-            <select id="carreraMatricula">
-              <option value="">Selecciona una carrera</option>
-            </select>
-          </label>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>7) Resumen de configuración</h2>
+        <h2>Resumen</h2>
         <div id="resumen" class="resumen vacío">Aún no hay configuración guardada.</div>
       </section>
     </main>
