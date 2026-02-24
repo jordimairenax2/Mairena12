@@ -3,78 +3,151 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Planificador de Horario Universitario</title>
+    <title>Configurador Académico de Horarios</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="hero">
-      <h1>Creación de horario universitario</h1>
+      <h1>Configuración académica de horarios</h1>
       <p>
-        Asigna automáticamente materias, docentes, aulas y hora de salida al estudiante
-        durante su matrícula.
+        Coordina carreras, materias, docentes, turnos, bloques y recesos desde una única
+        interfaz.
       </p>
     </header>
 
     <main class="layout">
       <section class="card">
-        <h2>1) Datos del estudiante</h2>
-        <form id="matriculaForm">
-          <div class="grid-2">
-            <label>
-              Nombre completo
-              <input type="text" id="nombre" required placeholder="Ej: Ana Pérez" />
-            </label>
-            <label>
-              Matrícula
-              <input type="text" id="matricula" required placeholder="Ej: 2026-001" />
-            </label>
-            <label>
-              Carrera
-              <select id="carrera" required>
-                <option value="">Selecciona una carrera</option>
-                <option>Ingeniería en Sistemas</option>
-                <option>Administración de Empresas</option>
-                <option>Psicología</option>
-              </select>
-            </label>
-            <label>
-              Turno
-              <select id="turno" required>
-                <option value="">Selecciona un turno</option>
-                <option>Diurno</option>
-                <option>Vespertino</option>
-                <option>Sabatino</option>
-              </select>
-            </label>
-          </div>
-
-          <fieldset>
-            <legend>2) Materias a matricular</legend>
-            <p class="hint">Selecciona al menos 2 materias.</p>
-            <div id="materiasContainer" class="materias-grid"></div>
-          </fieldset>
-
-          <button type="submit">Generar horario</button>
-        </form>
-      </section>
-
-      <section class="card" id="resultadoCard">
-        <h2>3) Resultado de asignación</h2>
-        <div id="resumen" class="resumen vacío">
-          Completa el formulario y genera el horario.
-        </div>
-        <div id="tablaAsignacion"></div>
+        <h2>1) Carga de materias por CSV</h2>
+        <p class="hint">Formato esperado: <code>clase,año,credito,categoria</code></p>
+        <label>
+          Pega el CSV
+          <textarea
+            id="csvInput"
+            rows="6"
+            placeholder="Programación I,1,4,Desarrollo\nCálculo I,1,4,Matemática"
+          ></textarea>
+        </label>
+        <button id="btnProcesarCsv" type="button">Procesar CSV</button>
+        <div id="materiasPreview" class="table-wrap"></div>
       </section>
 
       <section class="card">
-        <h2>4) Vista semanal</h2>
-        <div id="horarioSemanal" class="horario-semanal"></div>
+        <h2>2) Configuración de docentes y categorías</h2>
+        <form id="docenteForm" class="stacked-form">
+          <div class="grid-2">
+            <label>
+              Nombre del maestro
+              <input type="text" id="nombreDocente" required placeholder="Ej: Ana López" />
+            </label>
+            <label>
+              Especialidades / categorías (separadas por coma)
+              <input
+                type="text"
+                id="especialidades"
+                required
+                placeholder="Ej: Desarrollo, Matemática"
+              />
+            </label>
+          </div>
+          <button type="submit">Registrar maestro</button>
+        </form>
+
+        <form id="categoriaForm" class="stacked-form with-top-border">
+          <div class="grid-2">
+            <label>
+              Categoría
+              <input type="text" id="categoriaNombre" required placeholder="Ej: Desarrollo" />
+            </label>
+            <label>
+              Nombre del maestro
+              <select id="docenteCategoria" required>
+                <option value="">Selecciona un maestro</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit">Asignar categoría</button>
+        </form>
+
+        <div class="grid-2">
+          <div>
+            <h3>Maestros registrados</h3>
+            <ul id="listaDocentes" class="simple-list"></ul>
+          </div>
+          <div>
+            <h3>Categorías asignadas</h3>
+            <ul id="listaCategorias" class="simple-list"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3) Configuración de turno y reglas horarias</h2>
+        <form id="turnoForm" class="stacked-form">
+          <div class="grid-2">
+            <label>
+              Nombre del turno
+              <input type="text" id="nombreTurno" required placeholder="Ej: Diurno" />
+            </label>
+            <label>
+              Días del turno (separados por coma)
+              <input type="text" id="diasTurno" required placeholder="Lunes,Martes,Miércoles" />
+            </label>
+          </div>
+          <label>
+            Prioridad por día (formato Día:Prioridad, separado por coma)
+            <input
+              type="text"
+              id="prioridadDia"
+              required
+              placeholder="Lunes:1,Martes:2,Miércoles:3"
+            />
+          </label>
+          <button type="submit">Guardar turno</button>
+        </form>
+
+        <form id="bloqueForm" class="stacked-form with-top-border">
+          <div class="grid-2">
+            <label>
+              Crédito por bloque
+              <input type="number" id="creditoBloque" min="1" required />
+            </label>
+            <label>
+              Minutos por bloque
+              <input type="number" id="minutosBloque" min="1" required />
+            </label>
+          </div>
+          <button type="submit">Guardar bloques</button>
+        </form>
+
+        <form id="recesoForm" class="stacked-form with-top-border">
+          <h3>Receso y almuerzo</h3>
+          <div class="grid-2">
+            <label>
+              Receso inicio
+              <input type="time" id="recesoInicio" required />
+            </label>
+            <label>
+              Receso fin
+              <input type="time" id="recesoFin" required />
+            </label>
+            <label>
+              Almuerzo inicio
+              <input type="time" id="almuerzoInicio" required />
+            </label>
+            <label>
+              Almuerzo fin
+              <input type="time" id="almuerzoFin" required />
+            </label>
+          </div>
+          <button type="submit">Guardar recesos</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>4) Resumen de configuración</h2>
+        <div id="resumen" class="resumen vacío">Aún no hay configuración guardada.</div>
       </section>
     </main>
-
-    <footer>
-      <small>Sistema demostrativo para planificación de matrícula universitaria.</small>
-    </footer>
 
     <script src="script.js"></script>
   </body>
