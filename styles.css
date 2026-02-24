@@ -14,7 +14,7 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text);
   background: var(--bg);
 }
@@ -112,6 +112,10 @@ select {
   padding: 0.6rem;
 }
 
+select[multiple] {
+  min-height: 120px;
+}
+
 button {
   width: fit-content;
   border: none;
@@ -168,4 +172,10 @@ button:hover {
 
 .resumen.vacío {
   color: var(--muted);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
 }
