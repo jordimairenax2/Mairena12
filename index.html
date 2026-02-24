@@ -10,14 +10,31 @@
     <header class="hero">
       <h1>Configuración académica de horarios</h1>
       <p>
-        Coordina carreras, materias, docentes, turnos, bloques y recesos desde una única
-        interfaz.
+        Coordina carreras, coordinaciones, materias, docentes, turnos, bloques y recesos desde
+        una única interfaz.
       </p>
     </header>
 
     <main class="layout">
       <section class="card">
-        <h2>1) Carga de materias por CSV</h2>
+        <h2>1) Configuración general académica</h2>
+        <form id="generalForm" class="stacked-form">
+          <div class="grid-2">
+            <label>
+              Nombre de la coordinación
+              <input type="text" id="nombreCoordinacion" required placeholder="Ej: Coordinación de Ingeniería" />
+            </label>
+            <label>
+              Nombre de la carrera
+              <input type="text" id="nombreCarrera" required placeholder="Ej: Ingeniería en Sistemas" />
+            </label>
+          </div>
+          <button type="submit">Registrar coordinación y carrera</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>2) Carga de materias por CSV</h2>
         <p class="hint">Formato esperado: <code>clase,año,credito,categoria</code></p>
         <label>
           Pega el CSV
@@ -32,7 +49,7 @@
       </section>
 
       <section class="card">
-        <h2>2) Configuración de docentes y categorías</h2>
+        <h2>3) Configuración de docentes y categorías</h2>
         <form id="docenteForm" class="stacked-form">
           <div class="grid-2">
             <label>
@@ -81,7 +98,7 @@
       </section>
 
       <section class="card">
-        <h2>3) Configuración de turno y reglas horarias</h2>
+        <h2>4) Configuración de turno y reglas horarias</h2>
         <form id="turnoForm" class="stacked-form">
           <div class="grid-2">
             <label>
@@ -144,7 +161,18 @@
       </section>
 
       <section class="card">
-        <h2>4) Resumen de configuración</h2>
+        <h2>5) Aplicar configuración por área</h2>
+        <p class="hint">Cada botón aplica la configuración para su área correspondiente.</p>
+        <div class="actions-grid">
+          <button id="btnAplicarGeneral" type="button">Aplicar área general</button>
+          <button id="btnAplicarMaterias" type="button">Aplicar área de materias</button>
+          <button id="btnAplicarDocentes" type="button">Aplicar área de docentes y categorías</button>
+          <button id="btnAplicarHorario" type="button">Aplicar área de horario</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>6) Resumen de configuración</h2>
         <div id="resumen" class="resumen vacío">Aún no hay configuración guardada.</div>
       </section>
     </main>

@@ -1,12 +1,21 @@
 const estado = {
+  coordinacion: null,
+  carrera: null,
   materias: [],
   docentes: [],
   categorias: [],
   turnos: [],
   bloques: null,
   recesos: null,
+  areasAplicadas: {
+    general: false,
+    materias: false,
+    docentes: false,
+    horario: false,
+  },
 };
 
+const generalForm = document.getElementById("generalForm");
 const csvInput = document.getElementById("csvInput");
 const materiasPreview = document.getElementById("materiasPreview");
 const btnProcesarCsv = document.getElementById("btnProcesarCsv");
@@ -18,6 +27,10 @@ const docenteCategoria = document.getElementById("docenteCategoria");
 const turnoForm = document.getElementById("turnoForm");
 const bloqueForm = document.getElementById("bloqueForm");
 const recesoForm = document.getElementById("recesoForm");
+const btnAplicarGeneral = document.getElementById("btnAplicarGeneral");
+const btnAplicarMaterias = document.getElementById("btnAplicarMaterias");
+const btnAplicarDocentes = document.getElementById("btnAplicarDocentes");
+const btnAplicarHorario = document.getElementById("btnAplicarHorario");
 const resumen = document.getElementById("resumen");
 
 function limpiarTexto(valor) {
@@ -90,11 +103,18 @@ function renderCategorias() {
     .join("");
 }
 
+function marcarAreaAplicada(area) {
+  estado.areasAplicadas[area] = true;
+  renderResumen();
+}
+
 function renderResumen() {
   resumen.classList.remove("vacío");
   const ultimoTurno = estado.turnos.at(-1);
 
   resumen.innerHTML = `
+    <strong>Coordinación:</strong> ${estado.coordinacion || "Pendiente"}<br>
+    <strong>Carrera:</strong> ${estado.carrera || "Pendiente"}<br>
     <strong>Materias cargadas por CSV:</strong> ${estado.materias.length}<br>
     <strong>Maestros registrados:</strong> ${estado.docentes.length}<br>
     <strong>Categorías asignadas:</strong> ${estado.categorias.length}<br>
@@ -116,9 +136,22 @@ function renderResumen() {
       estado.recesos
         ? `${estado.recesos.almuerzoInicio} - ${estado.recesos.almuerzoFin}`
         : "Pendiente"
-    }
+    }<br>
+    <strong>Aplicación por áreas:</strong><br>
+    - General: ${estado.areasAplicadas.general ? "Aplicada" : "Pendiente"}<br>
+    - Materias: ${estado.areasAplicadas.materias ? "Aplicada" : "Pendiente"}<br>
+    - Docentes y categorías: ${estado.areasAplicadas.docentes ? "Aplicada" : "Pendiente"}<br>
+    - Horario: ${estado.areasAplicadas.horario ? "Aplicada" : "Pendiente"}
   `;
 }
+
+generalForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  estado.coordinacion = document.getElementById("nombreCoordinacion").value.trim();
+  estado.carrera = document.getElementById("nombreCarrera").value.trim();
+  generalForm.reset();
+  renderResumen();
+});
 
 btnProcesarCsv.addEventListener("click", () => {
   const filas = csvInput.value
@@ -199,3 +232,8 @@ recesoForm.addEventListener("submit", (event) => {
   };
   renderResumen();
 });
+
+btnAplicarGeneral.addEventListener("click", () => marcarAreaAplicada("general"));
+btnAplicarMaterias.addEventListener("click", () => marcarAreaAplicada("materias"));
+btnAplicarDocentes.addEventListener("click", () => marcarAreaAplicada("docentes"));
+btnAplicarHorario.addEventListener("click", () => marcarAreaAplicada("horario"));
