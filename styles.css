@@ -46,7 +46,8 @@ body {
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
-h2 {
+h2,
+h3 {
   margin-top: 0;
   color: var(--primary);
 }
@@ -65,50 +66,26 @@ fieldset {
 
 input,
 select,
-button {
+button,
+textarea {
   font: inherit;
 }
 
 input,
-select {
+select,
+textarea {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.6rem;
 }
 
-fieldset {
-  margin-top: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.75rem;
-}
-
-.hint {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.materias-grid {
-  margin-top: 0.6rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 0.5rem;
-}
-
-.materia-item {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.65rem;
-  background: #fcfdff;
-}
-
-.materia-item strong {
-  display: block;
+textarea {
+  resize: vertical;
 }
 
 button {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
+  width: fit-content;
   border: none;
   background: var(--accent);
   color: white;
@@ -121,12 +98,49 @@ button:hover {
   filter: brightness(0.95);
 }
 
+.hint {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+}
+
+.stacked-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.with-top-border {
+  border-top: 1px solid var(--border);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.simple-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.simple-list li {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafcff;
+  padding: 0.55rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.simple-list span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .resumen {
   background: var(--primary-soft);
   border-left: 4px solid var(--primary);
   padding: 0.8rem;
   border-radius: 8px;
-  margin-bottom: 1rem;
 }
 
 .resumen.vacío {
@@ -135,6 +149,7 @@ button:hover {
 
 .table-wrap {
   overflow-x: auto;
+  margin-top: 0.75rem;
 }
 
 table {
@@ -151,26 +166,4 @@ td {
 
 th {
   background: #f8fafc;
-}
-
-.horario-semanal {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.slot {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.6rem;
-  background: #f9fbff;
-}
-
-.slot small {
-  color: var(--muted);
-}
-
-footer {
-  text-align: center;
-  padding: 1rem;
-  color: var(--muted);
 }

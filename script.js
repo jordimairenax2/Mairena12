@@ -1,173 +1,201 @@
-const ofertaAcademica = [
-  {
-    codigo: "INF-101",
-    nombre: "Programación I",
-    docente: "Ing. Laura Mejía",
-    aula: "B-203",
-    dia: "Lunes",
-    inicio: "08:00",
-    fin: "09:40",
-  },
-  {
-    codigo: "INF-120",
-    nombre: "Base de Datos",
-    docente: "MSc. Ricardo Núñez",
-    aula: "LAB-05",
-    dia: "Martes",
-    inicio: "10:00",
-    fin: "11:40",
-  },
-  {
-    codigo: "MAT-110",
-    nombre: "Cálculo I",
-    docente: "Lic. Elena Díaz",
-    aula: "A-102",
-    dia: "Miércoles",
-    inicio: "08:00",
-    fin: "09:40",
-  },
-  {
-    codigo: "ADM-101",
-    nombre: "Contabilidad General",
-    docente: "Lic. Tomás Romero",
-    aula: "C-301",
-    dia: "Jueves",
-    inicio: "13:00",
-    fin: "14:40",
-  },
-  {
-    codigo: "PSI-105",
-    nombre: "Psicología del Desarrollo",
-    docente: "Dra. Paola Santos",
-    aula: "D-110",
-    dia: "Viernes",
-    inicio: "09:50",
-    fin: "11:30",
-  },
-  {
-    codigo: "GEN-130",
-    nombre: "Metodología de la Investigación",
-    docente: "MSc. José Herrera",
-    aula: "A-205",
-    dia: "Sábado",
-    inicio: "08:00",
-    fin: "09:40",
-  },
-];
+const estado = {
+  materias: [],
+  docentes: [],
+  categorias: [],
+  turnos: [],
+  bloques: null,
+  recesos: null,
+};
 
-const materiasContainer = document.getElementById("materiasContainer");
-const matriculaForm = document.getElementById("matriculaForm");
+const csvInput = document.getElementById("csvInput");
+const materiasPreview = document.getElementById("materiasPreview");
+const btnProcesarCsv = document.getElementById("btnProcesarCsv");
+const docenteForm = document.getElementById("docenteForm");
+const categoriaForm = document.getElementById("categoriaForm");
+const listaDocentes = document.getElementById("listaDocentes");
+const listaCategorias = document.getElementById("listaCategorias");
+const docenteCategoria = document.getElementById("docenteCategoria");
+const turnoForm = document.getElementById("turnoForm");
+const bloqueForm = document.getElementById("bloqueForm");
+const recesoForm = document.getElementById("recesoForm");
 const resumen = document.getElementById("resumen");
-const tablaAsignacion = document.getElementById("tablaAsignacion");
-const horarioSemanal = document.getElementById("horarioSemanal");
 
-function cargarMaterias() {
-  materiasContainer.innerHTML = ofertaAcademica
-    .map(
-      (m) => `
-      <label class="materia-item">
-        <span>
-          <strong>${m.codigo} - ${m.nombre}</strong>
-          <small>${m.dia} | ${m.inicio} - ${m.fin}</small>
-        </span>
-        <input type="checkbox" name="materia" value="${m.codigo}" />
-      </label>
-    `
-    )
-    .join("");
+function limpiarTexto(valor) {
+  return valor.trim();
 }
 
-function minutosDesdeMedianoche(hora) {
-  const [h, m] = hora.split(":").map(Number);
-  return h * 60 + m;
+function convertirPrioridades(texto) {
+  return texto
+    .split(",")
+    .map((par) => par.trim())
+    .filter(Boolean)
+    .map((par) => {
+      const [dia, prioridad] = par.split(":").map(limpiarTexto);
+      return { dia, prioridad: Number(prioridad) };
+    })
+    .filter((item) => item.dia && Number.isFinite(item.prioridad));
 }
 
-function crearTabla(asignaciones) {
-  const rows = asignaciones
+function renderMaterias() {
+  if (!estado.materias.length) {
+    materiasPreview.innerHTML = "";
+    return;
+  }
+
+  const rows = estado.materias
     .map(
-      (m) => `
+      (materia) => `
       <tr>
-        <td>${m.codigo}</td>
-        <td>${m.nombre}</td>
-        <td>${m.docente}</td>
-        <td>${m.aula}</td>
-        <td>${m.dia}</td>
-        <td>${m.inicio} - ${m.fin}</td>
+        <td>${materia.clase}</td>
+        <td>${materia.anio}</td>
+        <td>${materia.credito}</td>
+        <td>${materia.categoria}</td>
       </tr>
     `
     )
     .join("");
 
-  tablaAsignacion.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Materia</th>
-            <th>Docente asignado</th>
-            <th>Aula asignada</th>
-            <th>Día</th>
-            <th>Horario</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
+  materiasPreview.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Clase</th>
+          <th>Año</th>
+          <th>Crédito</th>
+          <th>Categoría</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
   `;
 }
 
-function crearHorarioSemanal(asignaciones) {
-  const ordenDias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-  const ordenadas = [...asignaciones].sort(
-    (a, b) => ordenDias.indexOf(a.dia) - ordenDias.indexOf(b.dia)
-  );
-
-  horarioSemanal.innerHTML = ordenadas
+function renderDocentes() {
+  listaDocentes.innerHTML = estado.docentes
     .map(
-      (m) => `
-      <article class="slot">
-        <strong>${m.dia}: ${m.inicio} - ${m.fin}</strong>
-        <div>${m.nombre}</div>
-        <small>${m.docente} | Aula ${m.aula}</small>
-      </article>
-    `
+      (docente) =>
+        `<li><strong>${docente.nombre}</strong><span>${docente.especialidades.join(", ")}</span></li>`
     )
+    .join("");
+
+  docenteCategoria.innerHTML = `
+    <option value="">Selecciona un maestro</option>
+    ${estado.docentes.map((d) => `<option>${d.nombre}</option>`).join("")}
+  `;
+}
+
+function renderCategorias() {
+  listaCategorias.innerHTML = estado.categorias
+    .map((item) => `<li><strong>${item.categoria}</strong><span>${item.docente}</span></li>`)
     .join("");
 }
 
-matriculaForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const nombre = document.getElementById("nombre").value.trim();
-  const matricula = document.getElementById("matricula").value.trim();
-  const carrera = document.getElementById("carrera").value;
-  const turno = document.getElementById("turno").value;
-
-  const seleccionadas = Array.from(
-    document.querySelectorAll('input[name="materia"]:checked')
-  ).map((nodo) => nodo.value);
-
-  if (seleccionadas.length < 2) {
-    alert("Debes seleccionar al menos 2 materias para generar el horario.");
-    return;
-  }
-
-  const asignaciones = ofertaAcademica.filter((m) => seleccionadas.includes(m.codigo));
-  const salida = asignaciones.reduce((max, m) => {
-    return minutosDesdeMedianoche(m.fin) > minutosDesdeMedianoche(max) ? m.fin : max;
-  }, "00:00");
-
+function renderResumen() {
   resumen.classList.remove("vacío");
-  resumen.innerHTML = `
-    <strong>Estudiante:</strong> ${nombre} (${matricula})<br>
-    <strong>Carrera:</strong> ${carrera} | <strong>Turno:</strong> ${turno}<br>
-    <strong>Materias inscritas:</strong> ${asignaciones.length}<br>
-    <strong>Hora estimada de salida:</strong> ${salida}
-  `;
+  const ultimoTurno = estado.turnos.at(-1);
 
-  crearTabla(asignaciones);
-  crearHorarioSemanal(asignaciones);
+  resumen.innerHTML = `
+    <strong>Materias cargadas por CSV:</strong> ${estado.materias.length}<br>
+    <strong>Maestros registrados:</strong> ${estado.docentes.length}<br>
+    <strong>Categorías asignadas:</strong> ${estado.categorias.length}<br>
+    <strong>Turnos configurados:</strong> ${estado.turnos.length}<br>
+    <strong>Último turno:</strong> ${
+      ultimoTurno
+        ? `${ultimoTurno.nombre} (${ultimoTurno.dias.join(", ")})`
+        : "Sin turno registrado"
+    }<br>
+    <strong>Bloques:</strong> ${
+      estado.bloques
+        ? `${estado.bloques.creditoPorBloque} crédito(s) / ${estado.bloques.minutosPorBloque} min`
+        : "Pendiente"
+    }<br>
+    <strong>Receso:</strong> ${
+      estado.recesos ? `${estado.recesos.recesoInicio} - ${estado.recesos.recesoFin}` : "Pendiente"
+    }<br>
+    <strong>Almuerzo:</strong> ${
+      estado.recesos
+        ? `${estado.recesos.almuerzoInicio} - ${estado.recesos.almuerzoFin}`
+        : "Pendiente"
+    }
+  `;
+}
+
+btnProcesarCsv.addEventListener("click", () => {
+  const filas = csvInput.value
+    .split("\n")
+    .map((fila) => fila.trim())
+    .filter(Boolean);
+
+  const materias = filas
+    .map((fila) => {
+      const [clase, anio, credito, categoria] = fila.split(",").map(limpiarTexto);
+      return { clase, anio, credito, categoria };
+    })
+    .filter((m) => m.clase && m.anio && m.credito && m.categoria);
+
+  estado.materias = materias;
+  renderMaterias();
+  renderResumen();
 });
 
-cargarMaterias();
+docenteForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const nombre = document.getElementById("nombreDocente").value.trim();
+  const especialidades = document
+    .getElementById("especialidades")
+    .value.split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  estado.docentes.push({ nombre, especialidades });
+  docenteForm.reset();
+  renderDocentes();
+  renderResumen();
+});
+
+categoriaForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const categoria = document.getElementById("categoriaNombre").value.trim();
+  const docente = docenteCategoria.value;
+
+  estado.categorias.push({ categoria, docente });
+  categoriaForm.reset();
+  renderCategorias();
+  renderResumen();
+});
+
+turnoForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const nombre = document.getElementById("nombreTurno").value.trim();
+  const dias = document
+    .getElementById("diasTurno")
+    .value.split(",")
+    .map((dia) => dia.trim())
+    .filter(Boolean);
+  const prioridades = convertirPrioridades(document.getElementById("prioridadDia").value);
+
+  estado.turnos.push({ nombre, dias, prioridades });
+  turnoForm.reset();
+  renderResumen();
+});
+
+bloqueForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  estado.bloques = {
+    creditoPorBloque: document.getElementById("creditoBloque").value,
+    minutosPorBloque: document.getElementById("minutosBloque").value,
+  };
+  bloqueForm.reset();
+  renderResumen();
+});
+
+recesoForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  estado.recesos = {
+    recesoInicio: document.getElementById("recesoInicio").value,
+    recesoFin: document.getElementById("recesoFin").value,
+    almuerzoInicio: document.getElementById("almuerzoInicio").value,
+    almuerzoFin: document.getElementById("almuerzoFin").value,
+  };
+  renderResumen();
+});

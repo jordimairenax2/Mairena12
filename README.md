@@ -1,3 +1,11 @@
-Este sistema está diseñado para la creación y configuración automática de horarios académicos, permitiendo administrar turnos (diurno, sabatino y dominical), definir bloques de clase con duración y créditos específicos, configurar días hábiles, registrar áreas académicas, asignar docentes según sus áreas y establecer la cantidad de estudiantes por carrera en el período activo. El sistema funcionará mediante una interfaz web intuitiva donde el usuario podrá ingresar la configuración académica y posteriormente generar horarios organizados según las reglas establecidas, evitando conflictos y optimizando la distribución de clases.
+Este sistema está diseñado para la creación y configuración de horarios académicos desde coordinación, permitiendo:
 
-El desarrollo se realizará utilizando HTML para la estructura del sistema, CSS para el diseño y estilo visual, y Java para la lógica del sistema. El control de versiones y gestión del proyecto se llevará a cabo mediante GitHub, permitiendo organizar el código, mantener versiones y trabajar de manera estructurada.
+- Registrar carreras con su propio horario.
+- Cargar materias por CSV con el formato `clase,año,credito,categoria`.
+- Configurar maestros y asignarles especialidades/categorías.
+- Registrar la categoría junto al nombre del maestro responsable.
+- Configurar turnos con días activos y prioridad por día.
+- Definir crédito por bloque y minutos por bloque.
+- Configurar receso y almuerzo, indicando hora de inicio y fin para ambos.
+
+El desarrollo utiliza HTML, CSS y JavaScript para una interfaz web simple de configuración.
