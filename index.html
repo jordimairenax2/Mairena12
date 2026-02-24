@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planificador de Horario Universitario</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>Creación de horario universitario</h1>
+      <p>
+        Asigna automáticamente materias, docentes, aulas y hora de salida al estudiante
+        durante su matrícula.
+      </p>
+    </header>
+
+    <main class="layout">
+      <section class="card">
+        <h2>1) Datos del estudiante</h2>
+        <form id="matriculaForm">
+          <div class="grid-2">
+            <label>
+              Nombre completo
+              <input type="text" id="nombre" required placeholder="Ej: Ana Pérez" />
+            </label>
+            <label>
+              Matrícula
+              <input type="text" id="matricula" required placeholder="Ej: 2026-001" />
+            </label>
+            <label>
+              Carrera
+              <select id="carrera" required>
+                <option value="">Selecciona una carrera</option>
+                <option>Ingeniería en Sistemas</option>
+                <option>Administración de Empresas</option>
+                <option>Psicología</option>
+              </select>
+            </label>
+            <label>
+              Turno
+              <select id="turno" required>
+                <option value="">Selecciona un turno</option>
+                <option>Diurno</option>
+                <option>Vespertino</option>
+                <option>Sabatino</option>
+              </select>
+            </label>
+          </div>
+
+          <fieldset>
+            <legend>2) Materias a matricular</legend>
+            <p class="hint">Selecciona al menos 2 materias.</p>
+            <div id="materiasContainer" class="materias-grid"></div>
+          </fieldset>
+
+          <button type="submit">Generar horario</button>
+        </form>
+      </section>
+
+      <section class="card" id="resultadoCard">
+        <h2>3) Resultado de asignación</h2>
+        <div id="resumen" class="resumen vacío">
+          Completa el formulario y genera el horario.
+        </div>
+        <div id="tablaAsignacion"></div>
+      </section>
+
+      <section class="card">
+        <h2>4) Vista semanal</h2>
+        <div id="horarioSemanal" class="horario-semanal"></div>
+      </section>
+    </main>
+
+    <footer>
+      <small>Sistema demostrativo para planificación de matrícula universitaria.</small>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
