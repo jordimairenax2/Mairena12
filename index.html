@@ -9,26 +9,25 @@
   <body>
     <header class="hero">
       <h1>Configuración académica de horarios</h1>
-      <p>Organiza la parte principal y la configuración desde pestañas separadas.</p>
+      <p>Separamos configuración y operación para evitar confusión.</p>
     </header>
 
     <main class="layout">
       <nav class="tabs" aria-label="Secciones principales">
-        <button class="tab-btn active" type="button" data-tab="principal">Parte principal</button>
+        <button class="tab-btn active" type="button" data-tab="principal">Principal</button>
         <button class="tab-btn" type="button" data-tab="configuracion">Configuración</button>
       </nav>
 
       <section id="tab-principal" class="tab-panel active">
         <section class="card">
-          <h2>Generar horario</h2>
-          <p class="hint">Solo selecciona coordinación y carrera para iniciar el horario.</p>
-          <form id="seleccionForm" class="stacked-form">
-            <div class="grid-2">
+          <h2>Matrícula</h2>
+          <p class="hint">Selecciona la coordinación y carrera registradas en configuración general.</p>
+          <form id="matriculaCargaForm" class="stacked-form">
+            <div class="grid-3">
               <label>
                 Coordinación
                 <select id="coordinacionPrincipal" required>
                   <option value="">Selecciona una coordinación</option>
-                  <option value="AQT">AQT</option>
                 </select>
               </label>
               <label>
@@ -37,96 +36,116 @@
                   <option value="">Selecciona una carrera</option>
                 </select>
               </label>
+              <label>
+                Turno
+                <select id="turnoPrincipal" required>
+                  <option value="">Selecciona un turno</option>
+                </select>
+              </label>
             </div>
-            <button type="submit">Usar selección</button>
+
+            <label>
+              CSV de clases (campos: Clase, año, créditos, categorías, compartida)
+              <input type="file" id="csvClases" accept=".csv,text/csv" required />
+            </label>
+            <button type="submit">Generar horarios por año</button>
           </form>
         </section>
 
         <section class="card">
-          <h2>Cantidad de estudiantes por carrera (período activo)</h2>
-          <form id="matriculaForm" class="stacked-form">
-            <div class="grid-2">
-              <label>
-                Carrera
-                <select id="carreraMatricula" required>
-                  <option value="">Selecciona una carrera</option>
-                </select>
-              </label>
-              <label>
-                Cantidad de estudiantes
-                <input type="number" id="cantidadEstudiantes" min="1" required placeholder="Ej: 120" />
-              </label>
-            </div>
-            <button type="submit">Guardar cantidad</button>
-          </form>
-          <ul id="listaMatricula" class="simple-list"></ul>
+          <h2>Resultado de generación</h2>
+          <ul id="listaHorarios" class="simple-list"></ul>
         </section>
       </section>
 
       <section id="tab-configuracion" class="tab-panel">
         <section class="card">
-          <h2>Configurar turnos</h2>
-          <form id="turnoForm" class="stacked-form">
-            <div class="grid-2">
-              <label>
-                Turno
-                <select id="nombreTurno" required>
-                  <option value="">Selecciona un turno</option>
-                  <option>Diurno</option>
-                  <option>Sabatino</option>
-                  <option>Dominical</option>
-                </select>
-              </label>
-              <label>
-                Días hábiles por turno (separados por coma)
-                <input type="text" id="diasTurno" required placeholder="Lunes,Martes,Miércoles" />
-              </label>
-            </div>
-            <div class="grid-3">
-              <label>
-                Duración del bloque (min)
-                <input type="number" id="duracionBloque" min="1" required />
-              </label>
-              <label>
-                Crédito por bloque
-                <input type="number" id="creditoBloque" min="1" required />
-              </label>
-              <label>
-                Máximo de bloques por día
-                <input type="number" id="maxBloquesDia" min="1" required />
-              </label>
-            </div>
-            <button type="submit">Guardar turno</button>
-          </form>
-          <ul id="listaTurnos" class="simple-list"></ul>
-        </section>
-
-        <section class="card">
-          <h2>Nueva área académica</h2>
-          <form id="areaForm" class="stacked-form">
+          <h2>1. Configuración general académica</h2>
+          <form id="generalForm" class="stacked-form">
             <label>
-              Nombre del área
-              <input type="text" id="nombreArea" required placeholder="Ej: Ciencias básicas o Tecnología" />
+              Coordinación
+              <input type="text" id="nombreCoordinacion" required placeholder="Ej: AQT" />
             </label>
-            <button type="submit">Agregar área</button>
+            <label>
+              Carreras asociadas (separadas por coma)
+              <input type="text" id="carrerasCoordinacion" required placeholder="Ej: Arquitectura,Sistemas" />
+            </label>
+            <button type="submit">Guardar coordinación</button>
           </form>
-          <ul id="listaAreas" class="simple-list"></ul>
+          <ul id="listaCoordinaciones" class="simple-list"></ul>
         </section>
 
         <section class="card">
-          <h2>Nuevo docente</h2>
+          <h2>2. Configuración de docentes y categorías</h2>
+          <form id="categoriaForm" class="stacked-form">
+            <label>
+              Nueva categoría (independiente)
+              <input type="text" id="nombreCategoria" required placeholder="Ej: Matemática" />
+            </label>
+            <button type="submit">Registrar categoría</button>
+          </form>
+          <ul id="listaCategorias" class="simple-list"></ul>
+
+          <hr />
+
           <form id="docenteForm" class="stacked-form">
             <label>
               Nombre del docente
               <input type="text" id="nombreDocente" required placeholder="Ej: Ana López" />
             </label>
             <label>
-              Áreas que se le pueden asignar (separadas por coma)
-              <input type="text" id="areasDocente" required placeholder="Ciencias básicas,Tecnología" />
+              Categorías del docente (puede elegir varias)
+              <select id="categoriasDocente" multiple required></select>
             </label>
             <button type="submit">Registrar docente</button>
           </form>
           <ul id="listaDocentes" class="simple-list"></ul>
+        </section>
+
+        <section class="card">
+          <h2>3. Configuración de turno y reglas horarias</h2>
+          <p class="hint">
+            El turno se guarda como una configuración integrada: prioridad por día, minutos/créditos por bloque,
+            receso y almuerzo.
+          </p>
+          <form id="turnoForm" class="stacked-form">
+            <div class="grid-2">
+              <label>
+                Nombre del turno
+                <input type="text" id="nombreTurno" required placeholder="Ej: Diurno" />
+              </label>
+              <label>
+                Días del turno (separados por coma)
+                <input type="text" id="diasTurno" required placeholder="Lunes,Martes,Miércoles,Jueves,Viernes" />
+              </label>
+            </div>
+            <label>
+              Prioridad por día (formato Día:prioridad, Día:prioridad)
+              <input type="text" id="prioridadDias" required placeholder="Lunes:1,Martes:2,Miércoles:3" />
+            </label>
+            <div class="grid-2">
+              <label>
+                Minutos por bloque
+                <input type="number" id="minutosBloque" min="1" required />
+              </label>
+              <label>
+                Créditos por bloque
+                <input type="number" id="creditosBloque" min="1" required />
+              </label>
+            </div>
+            <div class="grid-2">
+              <label>
+                Hora de receso
+                <input type="time" id="horaReceso" required />
+              </label>
+              <label>
+                Hora de almuerzo
+                <input type="time" id="horaAlmuerzo" required />
+              </label>
+            </div>
+            <button type="submit">Guardar turno integrado</button>
+          </form>
+          <ul id="listaTurnos" class="simple-list"></ul>
         </section>
       </section>
 
