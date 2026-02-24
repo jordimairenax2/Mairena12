@@ -1,4 +1,5 @@
 const estado = {
+  usuario: null,
   materias: [],
   docentes: [],
   categorias: [],
@@ -6,6 +7,14 @@ const estado = {
   bloques: null,
   recesos: null,
 };
+
+const vistaPrincipal = document.getElementById("vistaPrincipal");
+const vistaConfiguracion = document.getElementById("vistaConfiguracion");
+const btnVistaPrincipal = document.getElementById("btnVistaPrincipal");
+const btnVistaConfiguracion = document.getElementById("btnVistaConfiguracion");
+
+const usuarioForm = document.getElementById("usuarioForm");
+const resumenUsuario = document.getElementById("resumenUsuario");
 
 const csvInput = document.getElementById("csvInput");
 const materiasPreview = document.getElementById("materiasPreview");
@@ -24,6 +33,14 @@ function limpiarTexto(valor) {
   return valor.trim();
 }
 
+function cambiarVista(destino) {
+  const esPrincipal = destino === "principal";
+  vistaPrincipal.classList.toggle("hidden", !esPrincipal);
+  vistaConfiguracion.classList.toggle("hidden", esPrincipal);
+  btnVistaPrincipal.classList.toggle("is-active", esPrincipal);
+  btnVistaConfiguracion.classList.toggle("is-active", !esPrincipal);
+}
+
 function convertirPrioridades(texto) {
   return texto
     .split(",")
@@ -34,6 +51,22 @@ function convertirPrioridades(texto) {
       return { dia, prioridad: Number(prioridad) };
     })
     .filter((item) => item.dia && Number.isFinite(item.prioridad));
+}
+
+function renderUsuario() {
+  if (!estado.usuario) {
+    resumenUsuario.classList.add("vacío");
+    resumenUsuario.textContent = "Aún no hay datos del usuario guardados.";
+    return;
+  }
+
+  resumenUsuario.classList.remove("vacío");
+  resumenUsuario.innerHTML = `
+    <strong>Usuario:</strong> ${estado.usuario.nombre}<br>
+    <strong>Correo:</strong> ${estado.usuario.correo}<br>
+    <strong>Rol:</strong> ${estado.usuario.rol}<br>
+    <strong>Sede:</strong> ${estado.usuario.sede}
+  `;
 }
 
 function renderMaterias() {
@@ -120,6 +153,21 @@ function renderResumen() {
   `;
 }
 
+btnVistaPrincipal.addEventListener("click", () => cambiarVista("principal"));
+btnVistaConfiguracion.addEventListener("click", () => cambiarVista("configuracion"));
+
+usuarioForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  estado.usuario = {
+    nombre: document.getElementById("nombreUsuario").value.trim(),
+    correo: document.getElementById("correoUsuario").value.trim(),
+    rol: document.getElementById("rolUsuario").value,
+    sede: document.getElementById("sedeUsuario").value.trim(),
+  };
+
+  renderUsuario();
+});
+
 btnProcesarCsv.addEventListener("click", () => {
   const filas = csvInput.value
     .split("\n")
@@ -199,3 +247,6 @@ recesoForm.addEventListener("submit", (event) => {
   };
   renderResumen();
 });
+
+renderUsuario();
+cambiarVista("principal");

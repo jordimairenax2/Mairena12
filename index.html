@@ -8,144 +8,180 @@
   </head>
   <body>
     <header class="hero">
-      <h1>Configuración académica de horarios</h1>
-      <p>
-        Coordina carreras, materias, docentes, turnos, bloques y recesos desde una única
-        interfaz.
-      </p>
+      <h1>Sistema académico de horarios</h1>
+      <p>Menú principal para registrar al usuario y área de configuración por separado.</p>
     </header>
 
     <main class="layout">
-      <section class="card">
-        <h2>1) Carga de materias por CSV</h2>
-        <p class="hint">Formato esperado: <code>clase,año,credito,categoria</code></p>
-        <label>
-          Pega el CSV
-          <textarea
-            id="csvInput"
-            rows="6"
-            placeholder="Programación I,1,4,Desarrollo\nCálculo I,1,4,Matemática"
-          ></textarea>
-        </label>
-        <button id="btnProcesarCsv" type="button">Procesar CSV</button>
-        <div id="materiasPreview" class="table-wrap"></div>
-      </section>
+      <nav class="menu card">
+        <button id="btnVistaPrincipal" class="is-active" type="button">Menú principal</button>
+        <button id="btnVistaConfiguracion" type="button">Ir a configuración</button>
+      </nav>
 
-      <section class="card">
-        <h2>2) Configuración de docentes y categorías</h2>
-        <form id="docenteForm" class="stacked-form">
+      <section id="vistaPrincipal" class="card view">
+        <h2>Menú principal</h2>
+        <p class="hint">Completa los datos del usuario para continuar al módulo de configuración.</p>
+        <form id="usuarioForm" class="stacked-form">
           <div class="grid-2">
             <label>
-              Nombre del maestro
-              <input type="text" id="nombreDocente" required placeholder="Ej: Ana López" />
+              Nombre completo
+              <input type="text" id="nombreUsuario" required placeholder="Ej: María Gómez" />
             </label>
             <label>
-              Especialidades / categorías (separadas por coma)
-              <input
-                type="text"
-                id="especialidades"
-                required
-                placeholder="Ej: Desarrollo, Matemática"
-              />
-            </label>
-          </div>
-          <button type="submit">Registrar maestro</button>
-        </form>
-
-        <form id="categoriaForm" class="stacked-form with-top-border">
-          <div class="grid-2">
-            <label>
-              Categoría
-              <input type="text" id="categoriaNombre" required placeholder="Ej: Desarrollo" />
+              Correo electrónico
+              <input type="email" id="correoUsuario" required placeholder="Ej: maria@correo.com" />
             </label>
             <label>
-              Nombre del maestro
-              <select id="docenteCategoria" required>
-                <option value="">Selecciona un maestro</option>
+              Rol
+              <select id="rolUsuario" required>
+                <option value="">Selecciona un rol</option>
+                <option>Coordinación</option>
+                <option>Docente</option>
+                <option>Administración</option>
               </select>
             </label>
+            <label>
+              Sede / Campus
+              <input type="text" id="sedeUsuario" required placeholder="Ej: Central" />
+            </label>
           </div>
-          <button type="submit">Asignar categoría</button>
+          <button type="submit">Guardar datos del usuario</button>
         </form>
-
-        <div class="grid-2">
-          <div>
-            <h3>Maestros registrados</h3>
-            <ul id="listaDocentes" class="simple-list"></ul>
-          </div>
-          <div>
-            <h3>Categorías asignadas</h3>
-            <ul id="listaCategorias" class="simple-list"></ul>
-          </div>
-        </div>
+        <div id="resumenUsuario" class="resumen vacío">Aún no hay datos del usuario guardados.</div>
       </section>
 
-      <section class="card">
-        <h2>3) Configuración de turno y reglas horarias</h2>
-        <form id="turnoForm" class="stacked-form">
-          <div class="grid-2">
-            <label>
-              Nombre del turno
-              <input type="text" id="nombreTurno" required placeholder="Ej: Diurno" />
-            </label>
-            <label>
-              Días del turno (separados por coma)
-              <input type="text" id="diasTurno" required placeholder="Lunes,Martes,Miércoles" />
-            </label>
-          </div>
+      <section id="vistaConfiguracion" class="view hidden">
+        <section class="card">
+          <h2>1) Carga de materias por CSV</h2>
+          <p class="hint">Formato esperado: <code>clase,año,credito,categoria</code></p>
           <label>
-            Prioridad por día (formato Día:Prioridad, separado por coma)
-            <input
-              type="text"
-              id="prioridadDia"
-              required
-              placeholder="Lunes:1,Martes:2,Miércoles:3"
-            />
+            Pega el CSV
+            <textarea
+              id="csvInput"
+              rows="6"
+              placeholder="Programación I,1,4,Desarrollo\nCálculo I,1,4,Matemática"
+            ></textarea>
           </label>
-          <button type="submit">Guardar turno</button>
-        </form>
+          <button id="btnProcesarCsv" type="button">Procesar CSV</button>
+          <div id="materiasPreview" class="table-wrap"></div>
+        </section>
 
-        <form id="bloqueForm" class="stacked-form with-top-border">
+        <section class="card">
+          <h2>2) Configuración de docentes y categorías</h2>
+          <form id="docenteForm" class="stacked-form">
+            <div class="grid-2">
+              <label>
+                Nombre del maestro
+                <input type="text" id="nombreDocente" required placeholder="Ej: Ana López" />
+              </label>
+              <label>
+                Especialidades / categorías (separadas por coma)
+                <input
+                  type="text"
+                  id="especialidades"
+                  required
+                  placeholder="Ej: Desarrollo, Matemática"
+                />
+              </label>
+            </div>
+            <button type="submit">Registrar maestro</button>
+          </form>
+
+          <form id="categoriaForm" class="stacked-form with-top-border">
+            <div class="grid-2">
+              <label>
+                Categoría
+                <input type="text" id="categoriaNombre" required placeholder="Ej: Desarrollo" />
+              </label>
+              <label>
+                Nombre del maestro
+                <select id="docenteCategoria" required>
+                  <option value="">Selecciona un maestro</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit">Asignar categoría</button>
+          </form>
+
           <div class="grid-2">
-            <label>
-              Crédito por bloque
-              <input type="number" id="creditoBloque" min="1" required />
-            </label>
-            <label>
-              Minutos por bloque
-              <input type="number" id="minutosBloque" min="1" required />
-            </label>
+            <div>
+              <h3>Maestros registrados</h3>
+              <ul id="listaDocentes" class="simple-list"></ul>
+            </div>
+            <div>
+              <h3>Categorías asignadas</h3>
+              <ul id="listaCategorias" class="simple-list"></ul>
+            </div>
           </div>
-          <button type="submit">Guardar bloques</button>
-        </form>
+        </section>
 
-        <form id="recesoForm" class="stacked-form with-top-border">
-          <h3>Receso y almuerzo</h3>
-          <div class="grid-2">
+        <section class="card">
+          <h2>3) Configuración de turno y reglas horarias</h2>
+          <form id="turnoForm" class="stacked-form">
+            <div class="grid-2">
+              <label>
+                Nombre del turno
+                <input type="text" id="nombreTurno" required placeholder="Ej: Diurno" />
+              </label>
+              <label>
+                Días del turno (separados por coma)
+                <input type="text" id="diasTurno" required placeholder="Lunes,Martes,Miércoles" />
+              </label>
+            </div>
             <label>
-              Receso inicio
-              <input type="time" id="recesoInicio" required />
+              Prioridad por día (formato Día:Prioridad, separado por coma)
+              <input
+                type="text"
+                id="prioridadDia"
+                required
+                placeholder="Lunes:1,Martes:2,Miércoles:3"
+              />
             </label>
-            <label>
-              Receso fin
-              <input type="time" id="recesoFin" required />
-            </label>
-            <label>
-              Almuerzo inicio
-              <input type="time" id="almuerzoInicio" required />
-            </label>
-            <label>
-              Almuerzo fin
-              <input type="time" id="almuerzoFin" required />
-            </label>
-          </div>
-          <button type="submit">Guardar recesos</button>
-        </form>
-      </section>
+            <button type="submit">Guardar turno</button>
+          </form>
 
-      <section class="card">
-        <h2>4) Resumen de configuración</h2>
-        <div id="resumen" class="resumen vacío">Aún no hay configuración guardada.</div>
+          <form id="bloqueForm" class="stacked-form with-top-border">
+            <div class="grid-2">
+              <label>
+                Crédito por bloque
+                <input type="number" id="creditoBloque" min="1" required />
+              </label>
+              <label>
+                Minutos por bloque
+                <input type="number" id="minutosBloque" min="1" required />
+              </label>
+            </div>
+            <button type="submit">Guardar bloques</button>
+          </form>
+
+          <form id="recesoForm" class="stacked-form with-top-border">
+            <h3>Receso y almuerzo</h3>
+            <div class="grid-2">
+              <label>
+                Receso inicio
+                <input type="time" id="recesoInicio" required />
+              </label>
+              <label>
+                Receso fin
+                <input type="time" id="recesoFin" required />
+              </label>
+              <label>
+                Almuerzo inicio
+                <input type="time" id="almuerzoInicio" required />
+              </label>
+              <label>
+                Almuerzo fin
+                <input type="time" id="almuerzoFin" required />
+              </label>
+            </div>
+            <button type="submit">Guardar recesos</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>4) Resumen de configuración</h2>
+          <div id="resumen" class="resumen vacío">Aún no hay configuración guardada.</div>
+        </section>
       </section>
     </main>
 

@@ -1,11 +1,11 @@
 :root {
-  --primary: #164f9f;
-  --primary-soft: #e8f0fc;
-  --accent: #0f766e;
-  --bg: #f5f7fb;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --border: #d1d5db;
+  --primary: #000000;
+  --primary-soft: #f2f2f2;
+  --accent: #000000;
+  --bg: #f6f6f6;
+  --text: #c1121f;
+  --muted: #6f1d1b;
+  --border: #cfcfcf;
 }
 
 * {
@@ -20,9 +20,9 @@ body {
 }
 
 .hero {
-  background: linear-gradient(135deg, var(--primary), #0d3e80);
-  color: white;
-  padding: 2.5rem 1rem;
+  background: linear-gradient(135deg, var(--primary), #1e1e1e);
+  color: #ffffff;
+  padding: 2rem 1rem;
   text-align: center;
 }
 
@@ -39,17 +39,23 @@ body {
 }
 
 .card {
-  background: white;
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 h2,
 h3 {
   margin-top: 0;
-  color: var(--primary);
+  color: var(--text);
 }
 
 .grid-2 {
@@ -77,6 +83,8 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.6rem;
+  color: var(--text);
+  background: #fff;
 }
 
 textarea {
@@ -86,16 +94,25 @@ textarea {
 button {
   margin-top: 0.75rem;
   width: fit-content;
-  border: none;
+  border: 1px solid #000;
   background: var(--accent);
-  color: white;
+  color: #ffffff;
   padding: 0.65rem 1.1rem;
   border-radius: 8px;
   cursor: pointer;
 }
 
 button:hover {
-  filter: brightness(0.95);
+  filter: brightness(0.85);
+}
+
+.menu button {
+  margin-top: 0;
+}
+
+.menu button.is-active {
+  outline: 2px solid #8b0000;
+  outline-offset: 1px;
 }
 
 .hint {
@@ -125,7 +142,7 @@ button:hover {
 .simple-list li {
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fafcff;
+  background: #fdf7f7;
   padding: 0.55rem;
   display: grid;
   gap: 0.2rem;
@@ -138,7 +155,7 @@ button:hover {
 
 .resumen {
   background: var(--primary-soft);
-  border-left: 4px solid var(--primary);
+  border-left: 4px solid #000;
   padding: 0.8rem;
   border-radius: 8px;
 }
@@ -165,5 +182,14 @@ td {
 }
 
 th {
-  background: #f8fafc;
+  background: #f2f2f2;
+}
+
+.view {
+  display: grid;
+  gap: 1rem;
+}
+
+.hidden {
+  display: none;
 }
