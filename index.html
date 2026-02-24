@@ -13,10 +13,18 @@
         Coordina carreras, coordinaciones, materias, docentes, turnos, bloques y recesos desde
         una única interfaz.
       </p>
+      <button id="btnConfiguracion" type="button" class="hero-config-btn">Configuración</button>
+      <nav id="menuConfiguracion" class="menu-configuracion" aria-label="Áreas con configuración">
+        <a href="#areaGeneral">Configuración general</a>
+        <a href="#areaMaterias">Materias por CSV</a>
+        <a href="#areaDocentes">Docentes y categorías</a>
+        <a href="#areaHorario">Turno y reglas horarias</a>
+        <a href="#areaMatricula">Matrícula</a>
+      </nav>
     </header>
 
     <main class="layout">
-      <section class="card">
+      <section class="card" id="areaGeneral">
         <h2>1) Configuración general académica</h2>
         <form id="generalForm" class="stacked-form">
           <div class="grid-2">
@@ -33,7 +41,7 @@
         </form>
       </section>
 
-      <section class="card">
+      <section class="card" id="areaMaterias">
         <h2>2) Carga de materias por CSV</h2>
         <p class="hint">Formato esperado: <code>clase,año,credito,categoria</code></p>
         <label>
@@ -48,7 +56,7 @@
         <div id="materiasPreview" class="table-wrap"></div>
       </section>
 
-      <section class="card">
+      <section class="card" id="areaDocentes">
         <h2>3) Configuración de docentes y categorías</h2>
         <form id="docenteForm" class="stacked-form">
           <div class="grid-2">
@@ -97,7 +105,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" id="areaHorario">
         <h2>4) Configuración de turno y reglas horarias</h2>
         <form id="turnoForm" class="stacked-form">
           <div class="grid-2">
@@ -171,8 +179,27 @@
         </div>
       </section>
 
+      <section class="card" id="areaMatricula">
+        <h2>6) Matrícula</h2>
+        <p class="hint">Selecciona la coordinación y carrera registradas en configuración general.</p>
+        <div class="grid-2">
+          <label>
+            Coordinación disponible
+            <select id="coordinacionMatricula">
+              <option value="">Selecciona una coordinación</option>
+            </select>
+          </label>
+          <label>
+            Carrera asociada
+            <select id="carreraMatricula">
+              <option value="">Selecciona una carrera</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
       <section class="card">
-        <h2>6) Resumen de configuración</h2>
+        <h2>7) Resumen de configuración</h2>
         <div id="resumen" class="resumen vacío">Aún no hay configuración guardada.</div>
       </section>
     </main>

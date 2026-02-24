@@ -1,6 +1,7 @@
 const estado = {
   coordinacion: null,
   carrera: null,
+  coordinacionesCarreras: [],
   materias: [],
   docentes: [],
   categorias: [],
@@ -31,6 +32,10 @@ const btnAplicarGeneral = document.getElementById("btnAplicarGeneral");
 const btnAplicarMaterias = document.getElementById("btnAplicarMaterias");
 const btnAplicarDocentes = document.getElementById("btnAplicarDocentes");
 const btnAplicarHorario = document.getElementById("btnAplicarHorario");
+const btnConfiguracion = document.getElementById("btnConfiguracion");
+const menuConfiguracion = document.getElementById("menuConfiguracion");
+const coordinacionMatricula = document.getElementById("coordinacionMatricula");
+const carreraMatricula = document.getElementById("carreraMatricula");
 const resumen = document.getElementById("resumen");
 
 function limpiarTexto(valor) {
@@ -108,6 +113,30 @@ function marcarAreaAplicada(area) {
   renderResumen();
 }
 
+function renderMatricula() {
+  const coordinacionesUnicas = [...new Set(estado.coordinacionesCarreras.map((item) => item.coordinacion))];
+
+  coordinacionMatricula.innerHTML = `
+    <option value="">Selecciona una coordinación</option>
+    ${coordinacionesUnicas.map((coordinacion) => `<option>${coordinacion}</option>`).join("")}
+  `;
+
+  carreraMatricula.innerHTML = '<option value="">Selecciona una carrera</option>';
+}
+
+function actualizarCarrerasMatricula() {
+  const coordinacionSeleccionada = coordinacionMatricula.value;
+
+  const carreras = estado.coordinacionesCarreras
+    .filter((item) => item.coordinacion === coordinacionSeleccionada)
+    .map((item) => item.carrera);
+
+  carreraMatricula.innerHTML = `
+    <option value="">Selecciona una carrera</option>
+    ${carreras.map((carrera) => `<option>${carrera}</option>`).join("")}
+  `;
+}
+
 function renderResumen() {
   resumen.classList.remove("vacío");
   const ultimoTurno = estado.turnos.at(-1);
@@ -149,7 +178,14 @@ generalForm.addEventListener("submit", (event) => {
   event.preventDefault();
   estado.coordinacion = document.getElementById("nombreCoordinacion").value.trim();
   estado.carrera = document.getElementById("nombreCarrera").value.trim();
+
+  estado.coordinacionesCarreras.push({
+    coordinacion: estado.coordinacion,
+    carrera: estado.carrera,
+  });
+
   generalForm.reset();
+  renderMatricula();
   renderResumen();
 });
 
@@ -237,3 +273,10 @@ btnAplicarGeneral.addEventListener("click", () => marcarAreaAplicada("general"))
 btnAplicarMaterias.addEventListener("click", () => marcarAreaAplicada("materias"));
 btnAplicarDocentes.addEventListener("click", () => marcarAreaAplicada("docentes"));
 btnAplicarHorario.addEventListener("click", () => marcarAreaAplicada("horario"));
+btnConfiguracion.addEventListener("click", () => {
+  menuConfiguracion.classList.toggle("visible");
+});
+menuConfiguracion.addEventListener("click", () => {
+  menuConfiguracion.classList.remove("visible");
+});
+coordinacionMatricula.addEventListener("change", actualizarCarrerasMatricula);
