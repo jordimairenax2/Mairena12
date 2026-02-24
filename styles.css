@@ -141,6 +141,7 @@ button:hover {
   border-left: 4px solid var(--primary);
   padding: 0.8rem;
   border-radius: 8px;
+  line-height: 1.45;
 }
 
 .resumen.vacío {
@@ -166,4 +167,14 @@ td {
 
 th {
   background: #f8fafc;
+}
+
+.actions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.actions-grid button {
+  margin-top: 0;
 }
