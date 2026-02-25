@@ -21,7 +21,8 @@
       <section id="tab-principal" class="tab-panel active">
         <section class="card">
           <h2>1. Adjuntar clases por carrera</h2>
-          <p class="hint">Sube un CSV por cada carrera. El archivo queda asociado a coordinación + carrera.</p>
+          <p class="hint">Sube un CSV por cada carrera. El archivo queda asociado a coordinación + carrera y se usa para generar automáticamente el horario.</p>
+          <button type="button" id="descargarPlantillaCsv">Descargar plantilla CSV</button>
           <form id="adjuntarClasesForm" class="stacked-form">
             <div class="grid-2">
               <label>
@@ -76,6 +77,7 @@
 
         <section class="card">
           <h2>Resultado de generación</h2>
+          <button type="button" id="exportarHorarioCsv" disabled>Exportar horario generado (CSV)</button>
           <ul id="listaHorarios" class="simple-list"></ul>
         </section>
       </section>
@@ -165,8 +167,18 @@
                 <input type="time" id="horaReceso" required />
               </label>
               <label>
+                Duración receso (min)
+                <input type="number" id="duracionReceso" min="1" value="15" required />
+              </label>
+            </div>
+            <div class="grid-2">
+              <label>
                 Hora de almuerzo
                 <input type="time" id="horaAlmuerzo" required />
+              </label>
+              <label>
+                Duración almuerzo (min)
+                <input type="number" id="duracionAlmuerzo" min="1" value="60" required />
               </label>
             </div>
             <button type="submit">Guardar turno integrado</button>

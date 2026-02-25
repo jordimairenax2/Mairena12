@@ -32,12 +32,14 @@ const coordinacionAdjunta = document.getElementById('coordinacionAdjunta');
 const carreraAdjunta = document.getElementById('carreraAdjunta');
 const csvClases = document.getElementById('csvClases');
 const listaClasesAdjuntas = document.getElementById('listaClasesAdjuntas');
+const descargarPlantillaCsv = document.getElementById('descargarPlantillaCsv');
 
 const generarHorarioForm = document.getElementById('generarHorarioForm');
 const coordinacionPrincipal = document.getElementById('coordinacionPrincipal');
 const carreraPrincipal = document.getElementById('carreraPrincipal');
 const turnoPrincipal = document.getElementById('turnoPrincipal');
 const listaHorarios = document.getElementById('listaHorarios');
+const exportarHorarioCsv = document.getElementById('exportarHorarioCsv');
 
 const resumen = document.getElementById('resumen');
 
@@ -57,6 +59,16 @@ function horaDesdeMinutos(totalMinutos) {
     .padStart(2, '0');
   const minutos = (totalMinutos % 60).toString().padStart(2, '0');
   return `${horas}:${minutos}`;
+}
+
+function descargarCSV(nombreArchivo, contenido) {
+  const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = nombreArchivo;
+  enlace.click();
+  URL.revokeObjectURL(url);
 }
 
 function llenarCoordinacionesPrincipal() {
@@ -197,6 +209,7 @@ function parsePrioridades(texto) {
 }
 
 function parseLineaCSV(linea) {
+  const separador = linea.includes(';') ? ';' : ',';
   const columnas = [];
   let actual = '';
   let enComillas = false;
@@ -214,7 +227,7 @@ function parseLineaCSV(linea) {
       continue;
     }
 
-    if (char === ',' && !enComillas) {
+    if (char === separador && !enComillas) {
       columnas.push(actual.trim());
       actual = '';
       continue;
@@ -229,18 +242,26 @@ function parseLineaCSV(linea) {
 
 function parseCSV(texto) {
   const lineas = texto
+    .replace(/^\uFEFF/, '')
     .split(/\r?\n/)
     .map((linea) => linea.trim())
     .filter(Boolean);
 
   if (!lineas.length) return { clases: [], error: 'El CSV está vacío.' };
 
-  const encabezados = parseLineaCSV(lineas[0]).map((h) => h.toLowerCase().trim());
+  const normalizar = (textoValor) =>
+    textoValor
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+
+  const encabezados = parseLineaCSV(lineas[0]).map((h) => normalizar(h));
   const indices = {
     clase: encabezados.indexOf('clase'),
-    anio: encabezados.indexOf('año') >= 0 ? encabezados.indexOf('año') : encabezados.indexOf('anio'),
-    creditos: encabezados.indexOf('créditos') >= 0 ? encabezados.indexOf('créditos') : encabezados.indexOf('creditos'),
-    categorias: encabezados.indexOf('categorías') >= 0 ? encabezados.indexOf('categorías') : encabezados.indexOf('categorias'),
+    anio: encabezados.indexOf('anio'),
+    creditos: encabezados.indexOf('creditos'),
+    categorias: encabezados.indexOf('categorias'),
     compartida: encabezados.indexOf('compartida'),
   };
 
@@ -276,8 +297,10 @@ function calcularHorarioPorAnio(clases, turno) {
   const prioridades = new Map(turno.prioridades.map((item) => [item.dia, item.prioridad]));
   const diasOrdenados = [...turno.dias].sort((a, b) => (prioridades.get(a) || 999) - (prioridades.get(b) || 999));
 
-  const recesoMin = minutosDesdeHora(turno.horaReceso);
-  const almuerzoMin = minutosDesdeHora(turno.horaAlmuerzo);
+  const recesoInicio = minutosDesdeHora(turno.horaReceso);
+  const recesoFin = recesoInicio + turno.duracionReceso;
+  const almuerzoInicio = minutosDesdeHora(turno.horaAlmuerzo);
+  const almuerzoFin = almuerzoInicio + turno.duracionAlmuerzo;
 
   const clasesPorAnio = clases.reduce((acc, clase) => {
     if (!acc[clase.anio]) acc[clase.anio] = [];
@@ -295,12 +318,16 @@ function calcularHorarioPorAnio(clases, turno) {
       const bloquesNecesarios = Math.max(1, Math.ceil(clase.creditos / turno.creditosBloque));
 
       for (let i = 0; i < bloquesNecesarios; i += 1) {
-        while (cursor <= recesoMin || cursor <= almuerzoMin) {
-          if (cursor === recesoMin || cursor === almuerzoMin) {
-            cursor += turno.minutosBloque;
-          } else {
-            break;
-          }
+        const finTentativo = cursor + turno.minutosBloque;
+        const cruzaReceso = cursor < recesoFin && finTentativo > recesoInicio;
+        const cruzaAlmuerzo = cursor < almuerzoFin && finTentativo > almuerzoInicio;
+
+        if (cruzaReceso) {
+          cursor = recesoFin;
+        }
+
+        if (cruzaAlmuerzo) {
+          cursor = almuerzoFin;
         }
 
         const inicio = cursor;
@@ -406,8 +433,14 @@ turnoForm.addEventListener('submit', (event) => {
     minutosBloque: Number(document.getElementById('minutosBloque').value),
     creditosBloque: Number(document.getElementById('creditosBloque').value),
     horaReceso: document.getElementById('horaReceso').value,
+    duracionReceso: Number(document.getElementById('duracionReceso').value),
     horaAlmuerzo: document.getElementById('horaAlmuerzo').value,
+    duracionAlmuerzo: Number(document.getElementById('duracionAlmuerzo').value),
   };
+
+  if (!turno.horaInicio || !turno.horaReceso || !turno.horaAlmuerzo) {
+    return;
+  }
 
   const indiceExistente = estado.turnos.findIndex((item) => item.nombre === nombre);
   if (indiceExistente >= 0) {
@@ -477,7 +510,36 @@ generarHorarioForm.addEventListener('submit', (event) => {
   };
 
   renderHorarios(estado.ultimaGeneracion);
+  exportarHorarioCsv.disabled = false;
   renderResumen();
+});
+
+descargarPlantillaCsv.addEventListener('click', () => {
+  const plantilla =
+    'clase,año,créditos,categorías,compartida\n' +
+    'Cálculo I,1,4,Matemática,No\n' +
+    'Programación I,1,5,Programación,No\n' +
+    'Física General,1,4,Ciencias,Sí';
+  descargarCSV('plantilla_clases.csv', plantilla);
+});
+
+exportarHorarioCsv.addEventListener('click', () => {
+  if (!estado.ultimaGeneracion || !estado.ultimaGeneracion.horarioPorAnio.length) return;
+
+  const filas = ['año,día,inicio,fin,clase,créditos,categorías'];
+
+  estado.ultimaGeneracion.horarioPorAnio.forEach(({ anio, bloques }) => {
+    bloques.forEach((bloque) => {
+      filas.push(
+        [anio, bloque.dia, bloque.inicio, bloque.fin, bloque.clase, bloque.creditos, bloque.categorias]
+          .map((valor) => `"${String(valor).replace(/"/g, '""')}"`)
+          .join(',')
+      );
+    });
+  });
+
+  const nombre = `horario_${estado.ultimaGeneracion.carrera}_${estado.ultimaGeneracion.turno}.csv`;
+  descargarCSV(nombre, filas.join('\n'));
 });
 
 renderClasesAdjuntas();
