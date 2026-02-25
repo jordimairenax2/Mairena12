@@ -9,7 +9,7 @@
   <body>
     <header class="hero">
       <h1>Configuración académica de horarios</h1>
-      <p>Separamos configuración y operación para evitar confusión.</p>
+      <p>Ahora puedes adjuntar el CSV de clases por carrera y generar horarios automáticamente.</p>
     </header>
 
     <main class="layout">
@@ -20,9 +20,36 @@
 
       <section id="tab-principal" class="tab-panel active">
         <section class="card">
-          <h2>Matrícula</h2>
-          <p class="hint">Selecciona la coordinación y carrera registradas en configuración general.</p>
-          <form id="matriculaCargaForm" class="stacked-form">
+          <h2>1. Adjuntar clases por carrera</h2>
+          <p class="hint">Sube un CSV por cada carrera. El archivo queda asociado a coordinación + carrera.</p>
+          <form id="adjuntarClasesForm" class="stacked-form">
+            <div class="grid-2">
+              <label>
+                Coordinación
+                <select id="coordinacionAdjunta" required>
+                  <option value="">Selecciona una coordinación</option>
+                </select>
+              </label>
+              <label>
+                Carrera
+                <select id="carreraAdjunta" required>
+                  <option value="">Selecciona una carrera</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              CSV de clases (campos: clase,año,créditos,categorías,compartida)
+              <input type="file" id="csvClases" accept=".csv,text/csv" required />
+            </label>
+            <button type="submit">Adjuntar CSV</button>
+          </form>
+          <ul id="listaClasesAdjuntas" class="simple-list"></ul>
+        </section>
+
+        <section class="card">
+          <h2>2. Generar horario</h2>
+          <p class="hint">Selecciona una carrera que ya tenga clases adjuntas y un turno configurado.</p>
+          <form id="generarHorarioForm" class="stacked-form">
             <div class="grid-3">
               <label>
                 Coordinación
@@ -43,11 +70,6 @@
                 </select>
               </label>
             </div>
-
-            <label>
-              CSV de clases (campos: Clase, año, créditos, categorías, compartida)
-              <input type="file" id="csvClases" accept=".csv,text/csv" required />
-            </label>
             <button type="submit">Generar horarios por año</button>
           </form>
         </section>
@@ -105,8 +127,8 @@
         <section class="card">
           <h2>3. Configuración de turno y reglas horarias</h2>
           <p class="hint">
-            El turno se guarda como una configuración integrada: prioridad por día, minutos/créditos por bloque,
-            receso y almuerzo.
+            El turno se guarda como una configuración integrada: prioridad por día, hora de inicio,
+            minutos/créditos por bloque, receso y almuerzo.
           </p>
           <form id="turnoForm" class="stacked-form">
             <div class="grid-2">
@@ -123,7 +145,11 @@
               Prioridad por día (formato Día:prioridad, Día:prioridad)
               <input type="text" id="prioridadDias" required placeholder="Lunes:1,Martes:2,Miércoles:3" />
             </label>
-            <div class="grid-2">
+            <div class="grid-3">
+              <label>
+                Hora de inicio
+                <input type="time" id="horaInicio" required />
+              </label>
               <label>
                 Minutos por bloque
                 <input type="number" id="minutosBloque" min="1" required />
