@@ -31,6 +31,7 @@ const adjuntarClasesForm = document.getElementById('adjuntarClasesForm');
 const coordinacionAdjunta = document.getElementById('coordinacionAdjunta');
 const carreraAdjunta = document.getElementById('carreraAdjunta');
 const csvClases = document.getElementById('csvClases');
+const estadoCsvUpload = document.getElementById('estadoCsvUpload');
 const listaClasesAdjuntas = document.getElementById('listaClasesAdjuntas');
 const descargarPlantillaCsv = document.getElementById('descargarPlantillaCsv');
 
@@ -356,6 +357,41 @@ function mostrarError(texto) {
   listaHorarios.innerHTML = `<li><span class="error-msg">${texto}</span></li>`;
 }
 
+
+function generarHorarioSeleccionActual() {
+  const coordinacion = coordinacionPrincipal.value;
+  const carrera = carreraPrincipal.value;
+  const nombreTurno = turnoPrincipal.value;
+  const turno = estado.turnos.find((item) => item.nombre === nombreTurno);
+  const clases = estado.clasesPorCarrera[claveCarrera(coordinacion, carrera)] || [];
+
+  if (!coordinacion || !carrera || !nombreTurno || !turno) {
+    mostrarError('Completa coordinación, carrera y turno para generar el horario.');
+    exportarHorarioCsv.disabled = true;
+    return false;
+  }
+
+  if (!clases.length) {
+    mostrarError('Esta carrera no tiene un CSV adjunto. Adjunta las clases primero.');
+    exportarHorarioCsv.disabled = true;
+    return false;
+  }
+
+  const horarioPorAnio = calcularHorarioPorAnio(clases, turno);
+
+  estado.ultimaGeneracion = {
+    coordinacion,
+    carrera,
+    turno: nombreTurno,
+    horarioPorAnio,
+  };
+
+  renderHorarios(estado.ultimaGeneracion);
+  exportarHorarioCsv.disabled = false;
+  renderResumen();
+  return true;
+}
+
 tabButtons.forEach((button) => {
   button.addEventListener('click', () => {
     const tabId = button.dataset.tab;
@@ -458,6 +494,19 @@ turnoForm.addEventListener('submit', (event) => {
 coordinacionPrincipal.addEventListener('change', llenarCarrerasPrincipal);
 coordinacionAdjunta.addEventListener('change', llenarCarrerasAdjunta);
 
+csvClases.addEventListener('change', () => {
+  const archivo = csvClases.files[0];
+
+  if (!archivo) {
+    estadoCsvUpload.textContent = 'Aún no seleccionas un archivo CSV.';
+    estadoCsvUpload.classList.remove('success-msg');
+    return;
+  }
+
+  estadoCsvUpload.textContent = `Archivo seleccionado: ${archivo.name}`;
+  estadoCsvUpload.classList.add('success-msg');
+});
+
 adjuntarClasesForm.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -476,42 +525,28 @@ adjuntarClasesForm.addEventListener('submit', async (event) => {
   }
 
   estado.clasesPorCarrera[claveCarrera(coordinacion, carrera)] = clases;
-  adjuntarClasesForm.reset();
+
+  coordinacionPrincipal.value = coordinacion;
+  llenarCarrerasPrincipal();
+  carreraPrincipal.value = carrera;
+
+  if (!turnoPrincipal.value && estado.turnos.length === 1) {
+    turnoPrincipal.value = estado.turnos[0].nombre;
+  }
+
+  estadoCsvUpload.textContent = `CSV cargado correctamente: ${archivo.name}`;
+  estadoCsvUpload.classList.add('success-msg');
+
   renderClasesAdjuntas();
   renderResumen();
+  generarHorarioSeleccionActual();
+
+  adjuntarClasesForm.reset();
 });
 
 generarHorarioForm.addEventListener('submit', (event) => {
   event.preventDefault();
-
-  const coordinacion = coordinacionPrincipal.value;
-  const carrera = carreraPrincipal.value;
-  const nombreTurno = turnoPrincipal.value;
-  const turno = estado.turnos.find((item) => item.nombre === nombreTurno);
-  const clases = estado.clasesPorCarrera[claveCarrera(coordinacion, carrera)] || [];
-
-  if (!coordinacion || !carrera || !nombreTurno || !turno) {
-    mostrarError('Completa coordinación, carrera y turno para generar el horario.');
-    return;
-  }
-
-  if (!clases.length) {
-    mostrarError('Esta carrera no tiene un CSV adjunto. Adjunta las clases primero.');
-    return;
-  }
-
-  const horarioPorAnio = calcularHorarioPorAnio(clases, turno);
-
-  estado.ultimaGeneracion = {
-    coordinacion,
-    carrera,
-    turno: nombreTurno,
-    horarioPorAnio,
-  };
-
-  renderHorarios(estado.ultimaGeneracion);
-  exportarHorarioCsv.disabled = false;
-  renderResumen();
+  generarHorarioSeleccionActual();
 });
 
 descargarPlantillaCsv.addEventListener('click', () => {
@@ -543,4 +578,5 @@ exportarHorarioCsv.addEventListener('click', () => {
 });
 
 renderClasesAdjuntas();
+estadoCsvUpload.textContent = 'Aún no seleccionas un archivo CSV.';
 renderResumen();
