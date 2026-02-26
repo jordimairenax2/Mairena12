@@ -9,7 +9,6 @@ const estado = {
   vistaActual: null,
 };
 
-const ANIOS_BASE = ['1', '2', '3', '4', '5'];
 const PRIORIDAD_DEFAULT = 'Lunes:1,Martes:2,Miércoles:3,Jueves:4,Viernes:5';
 const DIAS_TABLA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 const DURACION_CLASE_MINUTOS = 45;
@@ -89,6 +88,24 @@ function horaDesdeMinutos(totalMinutos) {
   return `${horas}:${minutos}`;
 }
 
+function normalizarAnio(valor) {
+  const limpio = String(valor || '').trim();
+  if (!limpio) return '';
+
+  const numeros = limpio.match(/\d+/);
+  if (!numeros) return limpio;
+  return String(Number(numeros[0]));
+}
+
+function ordenarAnios(anioA, anioB) {
+  const numeroA = Number(anioA);
+  const numeroB = Number(anioB);
+  const ambosNumericos = Number.isFinite(numeroA) && Number.isFinite(numeroB);
+
+  if (ambosNumericos) return numeroA - numeroB;
+  return String(anioA).localeCompare(String(anioB), 'es', { numeric: true });
+}
+
 function descargarCSV(nombreArchivo, contenido) {
   const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -166,7 +183,7 @@ function parseCSV(texto) {
     const columnas = parseLineaCSV(linea);
     return {
       clase: columnas[indices.clase] || '',
-      anio: String(columnas[indices.anio] || '').trim(),
+      anio: normalizarAnio(columnas[indices.anio] || ''),
       creditos: Number(columnas[indices.creditos] || 0),
       categorias: columnas[indices.categorias] || 'General',
       compartida: indices.compartida >= 0 ? columnas[indices.compartida] || 'No' : 'No',
@@ -343,52 +360,57 @@ function calcularHorarioPorAnio(clases, turno) {
   const diasOrdenados = [...turno.dias].sort((a, b) => (prioridades.get(a) || 999) - (prioridades.get(b) || 999));
   const bloquesDia = obtenerBloquesDisponibles(turno).slice(0, CLASES_POR_DIA);
 
-  const clasesPorAnio = ANIOS_BASE.reduce((acc, anio) => ({ ...acc, [anio]: [] }), {});
-  clases.forEach((clase) => {
-    if (!clasesPorAnio[clase.anio]) clasesPorAnio[clase.anio] = [];
-    clasesPorAnio[clase.anio].push(clase);
-  });
+  const clasesPorAnio = clases.reduce((acc, clase) => {
+    const anioNormalizado = normalizarAnio(clase.anio);
+    if (!anioNormalizado) return acc;
+    if (!acc[anioNormalizado]) acc[anioNormalizado] = [];
+    acc[anioNormalizado].push({ ...clase, anio: anioNormalizado });
+    return acc;
+  }, {});
 
-  return Object.entries(clasesPorAnio).map(([anio, clasesAnio]) => {
-    if (!clasesAnio.length) return { anio, bloques: [] };
+  return Object.keys(clasesPorAnio)
+    .sort(ordenarAnios)
+    .map((anio) => {
+      const clasesAnio = clasesPorAnio[anio] || [];
+      if (!clasesAnio.length) return { anio, bloques: [] };
 
-    const bloques = [];
-    let indiceRotacion = 0;
+      const bloques = [];
+      let indiceRotacion = 0;
 
-    const seleccionarClase = (clasesUsadas) => {
-      const total = clasesAnio.length;
-      for (let i = 0; i < total; i += 1) {
-        const idx = (indiceRotacion + i) % total;
-        const candidata = clasesAnio[idx];
-        if (!clasesUsadas.has(candidata.clase) || clasesUsadas.size >= total) {
-          indiceRotacion = (idx + 1) % total;
-          return candidata;
+      const seleccionarClase = (clasesUsadas) => {
+        const total = clasesAnio.length;
+        for (let i = 0; i < total; i += 1) {
+          const idx = (indiceRotacion + i) % total;
+          const candidata = clasesAnio[idx];
+          if (!clasesUsadas.has(candidata.clase) || clasesUsadas.size >= total) {
+            indiceRotacion = (idx + 1) % total;
+            return candidata;
+          }
         }
-      }
-      const fallback = clasesAnio[indiceRotacion++ % total];
-      return fallback;
-    };
+        const fallback = clasesAnio[indiceRotacion++ % total];
+        return fallback;
+      };
 
-    diasOrdenados.forEach((dia) => {
-      const clasesUsadas = new Set();
-      bloquesDia.forEach((bloqueTurno) => {
-        const clase = seleccionarClase(clasesUsadas);
-        clasesUsadas.add(clase.clase);
+      diasOrdenados.forEach((dia) => {
+        const clasesUsadas = new Set();
+        bloquesDia.forEach((bloqueTurno) => {
+          const clase = seleccionarClase(clasesUsadas);
+          clasesUsadas.add(clase.clase);
 
-        bloques.push({
-          dia,
-          inicio: bloqueTurno.inicio,
-          fin: bloqueTurno.fin,
-          clase: clase.clase,
-          creditos: clase.creditos,
-          categorias: clase.categorias,
-          tipo: clase.tipo || 'Aula',
+          bloques.push({
+            dia,
+            inicio: bloqueTurno.inicio,
+            fin: bloqueTurno.fin,
+            clase: clase.clase,
+            creditos: clase.creditos,
+            categorias: clase.categorias,
+            tipo: clase.tipo || 'Aula',
+          });
         });
       });
-    });
 
-    return { anio, bloques };
-  });
+      return { anio, bloques };
+    });
 }
 
 function renderTablaHorario(generacion) {
@@ -476,7 +498,7 @@ function agregarClaseManual() {
   }
 
   const nuevaClase = {
-    anio: document.getElementById('anioManual').value,
+    anio: normalizarAnio(document.getElementById('anioManual').value),
     clase: document.getElementById('claseManual').value.trim(),
     creditos: Number(document.getElementById('creditosManual').value),
     categorias: document.getElementById('categoriasManual').value.trim() || 'General',
