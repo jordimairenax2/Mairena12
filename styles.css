@@ -12,7 +12,7 @@
 body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: var(--text); background: var(--bg); }
 .hero { background: linear-gradient(135deg, var(--primary), #0d3e80); color: white; padding: 2.2rem 1rem; text-align: center; }
 .hero h1 { margin: 0 0 0.5rem; }
-.layout { max-width: 1100px; margin: -1rem auto 2rem; padding: 0 1rem; display: grid; gap: 1rem; }
+.layout { max-width: 1200px; margin: -1rem auto 2rem; padding: 0 1rem; display: grid; gap: 1rem; }
 .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1rem; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); }
 .tabs { display: flex; gap: 0.6rem; }
 .tab-btn { border: 1px solid var(--border); background: white; color: var(--text); border-radius: 10px; padding: 0.65rem 1rem; cursor: pointer; }
@@ -20,6 +20,7 @@ body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
 .tab-panel { display: none; gap: 1rem; }
 .tab-panel.active { display: grid; }
 h2 { margin-top: 0; color: var(--primary); }
+h3 { margin: .35rem 0; color: var(--accent); font-size: 1rem; }
 .grid-2, .grid-3 { display: grid; gap: 0.75rem; }
 .grid-2 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .grid-3 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
@@ -31,7 +32,6 @@ button { width: fit-content; border: none; background: var(--accent); color: whi
 button:hover { filter: brightness(0.95); }
 button:disabled { opacity: 0.6; cursor: not-allowed; }
 .hint { margin: 0 0 0.7rem; color: var(--muted); }
-.hint.success-msg { color: var(--accent); font-weight: 600; }
 .stacked-form { display: grid; gap: 0.75rem; }
 .simple-list { margin: 0.8rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
 .simple-list li { border: 1px solid var(--border); border-radius: 8px; background: #fafcff; padding: 0.55rem; display: grid; gap: 0.2rem; }
@@ -41,3 +41,12 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 .resumen.vacío { color: var(--muted); }
 hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
 .btn-eliminar-periodo { background: #c9342a; justify-self: start; }
+.accordion > summary { cursor: pointer; list-style: none; }
+.accordion > summary::-webkit-details-marker { display: none; }
+.accordion > summary h2 { display: inline; margin: 0; }
+.row-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+.table-grid { width: 100%; border-collapse: collapse; min-width: 760px; }
+.table-grid th, .table-grid td { border-bottom: 1px solid var(--border); padding: .55rem; text-align: left; vertical-align: top; }
+.table-grid th { background: #f1f5f9; }
+.table-grid small { color: var(--muted); }
