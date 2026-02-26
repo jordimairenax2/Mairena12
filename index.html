@@ -64,7 +64,7 @@
               </label>
             </div>
             <label>
-              CSV de clases (campos: clase,año,créditos,categorías,compartida)
+              CSV de clases (campos: clase,año,credito,categoria,compartida,tipo)
               <input type="file" id="csvClases" accept=".csv,text/csv" required />
             </label>
             <p id="estadoCsvUpload" class="hint">Aún no seleccionas un archivo CSV.</p>
@@ -111,10 +111,16 @@
                 <input type="number" id="creditosManual" min="1" value="4" required />
               </label>
             </div>
-            <label>
-              Categorías
-              <input type="text" id="categoriasManual" placeholder="Ej: Matemática" value="General" />
-            </label>
+            <div class="grid-2">
+              <label>
+                Categorías
+                <input type="text" id="categoriasManual" placeholder="Ej: Matemática" value="General" />
+              </label>
+              <label>
+                Tipo de aula
+                <input type="text" id="tipoManual" placeholder="Ej: Aula, Laboratorio, Taller" value="Aula" />
+              </label>
+            </div>
             <button type="submit">Agregar clase manual</button>
           </form>
           <p id="estadoClaseManual" class="hint"></p>
@@ -217,7 +223,7 @@
               </label>
               <label>
                 Minutos por bloque
-                <input type="number" id="minutosBloque" min="1" value="50" required />
+                <input type="number" id="minutosBloque" min="1" value="45" required />
               </label>
               <label>
                 Créditos por bloque
@@ -250,7 +256,7 @@
         </section>
 
         <section class="card">
-          <h2>4. Configuración de periodos por turno</h2>
+          <h2>4. Configuración de periodos por turno (cuatrimestres)</h2>
           <form id="periodoForm" class="stacked-form">
             <div class="grid-2">
               <label>
@@ -260,11 +266,16 @@
                 </select>
               </label>
               <label>
-                Nuevo periodo
-                <input type="text" id="nombrePeriodo" required placeholder="Ej: 2025-1" />
+                Cuatrimestre
+                <select id="nombrePeriodo" required>
+                  <option value="">Selecciona un cuatrimestre</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
               </label>
             </div>
-            <button type="submit">Agregar periodo</button>
+            <button type="submit">Agregar cuatrimestre</button>
           </form>
           <ul id="listaPeriodos" class="simple-list"></ul>
         </section>
