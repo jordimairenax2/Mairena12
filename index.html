@@ -311,12 +311,12 @@
             </label>
             <div class="grid-3">
               <label>
-                Hora inicio de clases
-                <input type="time" id="horaInicio" value="08:00" required />
+                Hora inicio de clases (fija)
+                <input type="time" id="horaInicio" value="08:00" readonly required />
               </label>
               <label>
-                Minutos por bloque
-                <input type="number" id="minutosBloque" min="1" value="45" required />
+                Minutos por bloque (fijo)
+                <input type="number" id="minutosBloque" min="45" value="45" readonly required />
               </label>
               <label>
                 Créditos por bloque
@@ -354,6 +354,7 @@
               </label>
             </div>
             <button type="submit">Guardar turno integrado</button>
+            <p class="hint">La jornada se genera automáticamente de 08:00 a 14:00, con bloques de 45 minutos y pausa de almuerzo.</p>
           </form>
           <ul id="listaTurnos" class="simple-list"></ul>
         </section>

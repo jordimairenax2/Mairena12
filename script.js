@@ -13,6 +13,8 @@ const ANIOS_BASE = ['1', '2', '3', '4', '5'];
 const PRIORIDAD_DEFAULT = 'Lunes:1,Martes:2,Miércoles:3,Jueves:4,Viernes:5';
 const DIAS_TABLA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 const DURACION_CLASE_MINUTOS = 45;
+const HORA_INICIO_JORNADA = '08:00';
+const HORA_FIN_JORNADA = '14:00';
 
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabPanels = document.querySelectorAll('.tab-panel');
@@ -288,36 +290,51 @@ function llenarPeriodosPrincipal() {
   periodoPrincipal.innerHTML = '<option value="">Selecciona un periodo</option>' + periodos.map((periodo) => `<option value="${periodo}">${periodo}</option>`).join('');
 }
 
-function construirBloquesTurno(turno, cantidad = 8) {
+function obtenerBloquesDisponibles(turno) {
   if (!turno) return [];
   const bloques = [];
   const duracionBloque = DURACION_CLASE_MINUTOS;
+  const inicioJornada = minutosDesdeHora(HORA_INICIO_JORNADA);
+  const finJornada = minutosDesdeHora(HORA_FIN_JORNADA);
   const recesoInicio = minutosDesdeHora(turno.horaReceso);
   const recesoFin = recesoInicio + turno.duracionReceso;
   const almuerzoInicio = minutosDesdeHora(turno.horaAlmuerzo);
   const almuerzoFin = almuerzoInicio + turno.duracionAlmuerzo;
-  let cursor = minutosDesdeHora(turno.horaInicio);
+  let cursor = inicioJornada;
+  let indice = 0;
 
-  for (let i = 0; i < cantidad; i += 1) {
-    const finTentativo = cursor + duracionBloque;
-    if (cursor < recesoFin && finTentativo > recesoInicio) cursor = recesoFin;
-    if (cursor < almuerzoFin && finTentativo > almuerzoInicio) cursor = almuerzoFin;
+  while (cursor + duracionBloque <= finJornada) {
+    const cruzaReceso = cursor < recesoFin && cursor + duracionBloque > recesoInicio;
+    const cruzaAlmuerzo = cursor < almuerzoFin && cursor + duracionBloque > almuerzoInicio;
+    if (cruzaReceso) {
+      cursor = recesoFin;
+      continue;
+    }
+    if (cruzaAlmuerzo) {
+      cursor = almuerzoFin;
+      continue;
+    }
+
     const inicio = cursor;
     const fin = cursor + duracionBloque;
-    bloques.push({ etiqueta: `${turno.nombre[0] || 'B'}${i + 1}`, inicio: horaDesdeMinutos(inicio), fin: horaDesdeMinutos(fin) });
+    bloques.push({ etiqueta: `${turno.nombre[0] || 'B'}${indice + 1}`, inicio: horaDesdeMinutos(inicio), fin: horaDesdeMinutos(fin) });
     cursor = fin;
+    indice += 1;
   }
+
   return bloques;
+}
+
+function construirBloquesTurno(turno) {
+  return obtenerBloquesDisponibles(turno);
 }
 
 function calcularHorarioPorAnio(clases, turno) {
   const prioridades = new Map(turno.prioridades.map((item) => [item.dia, item.prioridad]));
   const diasOrdenados = [...turno.dias].sort((a, b) => (prioridades.get(a) || 999) - (prioridades.get(b) || 999));
   const duracionBloque = DURACION_CLASE_MINUTOS;
-  const recesoInicio = minutosDesdeHora(turno.horaReceso);
-  const recesoFin = recesoInicio + turno.duracionReceso;
-  const almuerzoInicio = minutosDesdeHora(turno.horaAlmuerzo);
-  const almuerzoFin = almuerzoInicio + turno.duracionAlmuerzo;
+  const bloquesDia = obtenerBloquesDisponibles(turno);
+  const maxBloquesPorDia = bloquesDia.length;
 
   const clasesPorAnio = ANIOS_BASE.reduce((acc, anio) => ({ ...acc, [anio]: [] }), {});
   clases.forEach((clase) => {
@@ -326,7 +343,7 @@ function calcularHorarioPorAnio(clases, turno) {
   });
 
   return Object.entries(clasesPorAnio).map(([anio, clasesAnio]) => {
-    const cursoresPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, minutosDesdeHora(turno.horaInicio)]));
+    const indicesBloquePorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, 0]));
     const cargaPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, 0]));
     const bloques = [];
     const repeticionesPorDia = {};
@@ -338,8 +355,11 @@ function calcularHorarioPorAnio(clases, turno) {
       for (let i = 0; i < bloquesNecesarios; i += 1) {
         const disponibles = diasOrdenados.filter((dia) => {
           const actualDia = repeticionesPorDia[clase.clase][dia] || 0;
-          return actualDia < turno.maxRepeticionesDia;
+          const tieneEspacio = indicesBloquePorDia[dia] < maxBloquesPorDia;
+          return actualDia < turno.maxRepeticionesDia && tieneEspacio;
         });
+
+        if (!disponibles.length) return;
 
         const candidatos = disponibles.length ? disponibles : diasOrdenados;
         const dia = [...candidatos].sort((a, b) => {
@@ -347,25 +367,20 @@ function calcularHorarioPorAnio(clases, turno) {
           return cargaPorDia[a] - cargaPorDia[b];
         })[0];
 
-        let cursor = cursoresPorDia[dia];
-        const finTentativo = cursor + duracionBloque;
-        if (cursor < recesoFin && finTentativo > recesoInicio) cursor = recesoFin;
-        if (cursor < almuerzoFin && finTentativo > almuerzoInicio) cursor = almuerzoFin;
-
-        const inicio = cursor;
-        const fin = cursor + duracionBloque;
+        const bloqueTurno = bloquesDia[indicesBloquePorDia[dia]];
+        if (!bloqueTurno) return;
 
         bloques.push({
           dia,
-          inicio: horaDesdeMinutos(inicio),
-          fin: horaDesdeMinutos(fin),
+          inicio: bloqueTurno.inicio,
+          fin: bloqueTurno.fin,
           clase: clase.clase,
           creditos: clase.creditos,
           categorias: clase.categorias,
           tipo: clase.tipo || 'Aula',
         });
 
-        cursoresPorDia[dia] = fin;
+        indicesBloquePorDia[dia] += 1;
         cargaPorDia[dia] += duracionBloque;
         repeticionesPorDia[clase.clase][dia] = (repeticionesPorDia[clase.clase][dia] || 0) + 1;
       }
@@ -379,7 +394,7 @@ function calcularHorarioPorAnio(clases, turno) {
 function completarBloquesSinHuecos(bloques, clasesAnio, turno, diasOrdenados) {
   if (!clasesAnio.length) return bloques;
 
-  const base = construirBloquesTurno(turno, 8);
+  const base = construirBloquesTurno(turno);
   if (!base.length) return bloques;
 
   const mapa = new Map(bloques.map((bloque) => [`${bloque.dia}::${bloque.inicio}`, bloque]));
@@ -445,7 +460,7 @@ function completarBloquesSinHuecos(bloques, clasesAnio, turno, diasOrdenados) {
 
 function renderTablaHorario(generacion) {
   const turno = estado.turnos.find((t) => t.nombre === (generacion?.turno || filtroTurno.value || turnoGeneracion.value));
-  const bloquesBase = construirBloquesTurno(turno, 8);
+  const bloquesBase = construirBloquesTurno(turno);
   if (!bloquesBase.length) {
     tablaHorarioBody.innerHTML = '<tr><td colspan="6">Configura un turno para ver la tabla.</td></tr>';
     return;
@@ -669,7 +684,7 @@ turnoForm.addEventListener('submit', (event) => {
     dias,
     prioridadTexto,
     prioridades: parsePrioridades(prioridadTexto, dias),
-    horaInicio: document.getElementById('horaInicio').value || '08:00',
+    horaInicio: HORA_INICIO_JORNADA,
     minutosBloque: DURACION_CLASE_MINUTOS,
     creditosBloque: Number(document.getElementById('creditosBloque').value),
     maxRepeticionesSemana: Number(document.getElementById('maxRepeticionesSemana').value) || 3,
