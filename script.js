@@ -12,6 +12,7 @@ const estado = {
 const ANIOS_BASE = ['1', '2', '3', '4', '5'];
 const PRIORIDAD_DEFAULT = 'Lunes:1,Martes:2,Miércoles:3,Jueves:4,Viernes:5';
 const DIAS_TABLA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+const DURACION_CLASE_MINUTOS = 45;
 
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabPanels = document.querySelectorAll('.tab-panel');
@@ -290,6 +291,7 @@ function llenarPeriodosPrincipal() {
 function construirBloquesTurno(turno, cantidad = 8) {
   if (!turno) return [];
   const bloques = [];
+  const duracionBloque = DURACION_CLASE_MINUTOS;
   const recesoInicio = minutosDesdeHora(turno.horaReceso);
   const recesoFin = recesoInicio + turno.duracionReceso;
   const almuerzoInicio = minutosDesdeHora(turno.horaAlmuerzo);
@@ -297,11 +299,11 @@ function construirBloquesTurno(turno, cantidad = 8) {
   let cursor = minutosDesdeHora(turno.horaInicio);
 
   for (let i = 0; i < cantidad; i += 1) {
-    const finTentativo = cursor + turno.minutosBloque;
+    const finTentativo = cursor + duracionBloque;
     if (cursor < recesoFin && finTentativo > recesoInicio) cursor = recesoFin;
     if (cursor < almuerzoFin && finTentativo > almuerzoInicio) cursor = almuerzoFin;
     const inicio = cursor;
-    const fin = cursor + turno.minutosBloque;
+    const fin = cursor + duracionBloque;
     bloques.push({ etiqueta: `${turno.nombre[0] || 'B'}${i + 1}`, inicio: horaDesdeMinutos(inicio), fin: horaDesdeMinutos(fin) });
     cursor = fin;
   }
@@ -311,6 +313,7 @@ function construirBloquesTurno(turno, cantidad = 8) {
 function calcularHorarioPorAnio(clases, turno) {
   const prioridades = new Map(turno.prioridades.map((item) => [item.dia, item.prioridad]));
   const diasOrdenados = [...turno.dias].sort((a, b) => (prioridades.get(a) || 999) - (prioridades.get(b) || 999));
+  const duracionBloque = DURACION_CLASE_MINUTOS;
   const recesoInicio = minutosDesdeHora(turno.horaReceso);
   const recesoFin = recesoInicio + turno.duracionReceso;
   const almuerzoInicio = minutosDesdeHora(turno.horaAlmuerzo);
@@ -326,18 +329,16 @@ function calcularHorarioPorAnio(clases, turno) {
     const cursoresPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, minutosDesdeHora(turno.horaInicio)]));
     const cargaPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, 0]));
     const bloques = [];
-    const repeticionesSemana = {};
     const repeticionesPorDia = {};
 
     clasesAnio.forEach((clase) => {
       const bloquesNecesarios = Math.max(1, Math.ceil(clase.creditos / turno.creditosBloque));
-      repeticionesSemana[clase.clase] = 0;
       repeticionesPorDia[clase.clase] = repeticionesPorDia[clase.clase] || {};
 
       for (let i = 0; i < bloquesNecesarios; i += 1) {
         const disponibles = diasOrdenados.filter((dia) => {
           const actualDia = repeticionesPorDia[clase.clase][dia] || 0;
-          return actualDia < turno.maxRepeticionesDia && repeticionesSemana[clase.clase] < turno.maxRepeticionesSemana;
+          return actualDia < turno.maxRepeticionesDia;
         });
 
         const candidatos = disponibles.length ? disponibles : diasOrdenados;
@@ -347,12 +348,12 @@ function calcularHorarioPorAnio(clases, turno) {
         })[0];
 
         let cursor = cursoresPorDia[dia];
-        const finTentativo = cursor + turno.minutosBloque;
+        const finTentativo = cursor + duracionBloque;
         if (cursor < recesoFin && finTentativo > recesoInicio) cursor = recesoFin;
         if (cursor < almuerzoFin && finTentativo > almuerzoInicio) cursor = almuerzoFin;
 
         const inicio = cursor;
-        const fin = cursor + turno.minutosBloque;
+        const fin = cursor + duracionBloque;
 
         bloques.push({
           dia,
@@ -365,8 +366,7 @@ function calcularHorarioPorAnio(clases, turno) {
         });
 
         cursoresPorDia[dia] = fin;
-        cargaPorDia[dia] += turno.minutosBloque;
-        repeticionesSemana[clase.clase] += 1;
+        cargaPorDia[dia] += duracionBloque;
         repeticionesPorDia[clase.clase][dia] = (repeticionesPorDia[clase.clase][dia] || 0) + 1;
       }
     });
@@ -600,7 +600,7 @@ turnoForm.addEventListener('submit', (event) => {
     prioridadTexto,
     prioridades: parsePrioridades(prioridadTexto, dias),
     horaInicio: document.getElementById('horaInicio').value || '08:00',
-    minutosBloque: Number(document.getElementById('minutosBloque').value),
+    minutosBloque: DURACION_CLASE_MINUTOS,
     creditosBloque: Number(document.getElementById('creditosBloque').value),
     maxRepeticionesSemana: Number(document.getElementById('maxRepeticionesSemana').value) || 3,
     maxRepeticionesDia: Number(document.getElementById('maxRepeticionesDia').value) || 1,
