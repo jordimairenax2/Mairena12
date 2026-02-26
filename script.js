@@ -147,12 +147,14 @@ function parseCSV(texto) {
       .trim();
 
   const encabezados = parseLineaCSV(lineas[0]).map((h) => normalizar(h));
+  const indiceDesdeOpciones = (...opciones) => encabezados.findIndex((header) => opciones.includes(header));
   const indices = {
-    clase: encabezados.indexOf('clase'),
-    anio: encabezados.indexOf('anio'),
-    creditos: encabezados.indexOf('creditos'),
-    categorias: encabezados.indexOf('categorias'),
-    compartida: encabezados.indexOf('compartida'),
+    clase: indiceDesdeOpciones('clase'),
+    anio: indiceDesdeOpciones('anio', 'ano'),
+    creditos: indiceDesdeOpciones('creditos', 'credito'),
+    categorias: indiceDesdeOpciones('categorias', 'categoria'),
+    compartida: indiceDesdeOpciones('compartida'),
+    tipo: indiceDesdeOpciones('tipo'),
   };
 
   const faltantes = Object.entries(indices)
@@ -168,6 +170,7 @@ function parseCSV(texto) {
       creditos: Number(columnas[indices.creditos] || 0),
       categorias: columnas[indices.categorias] || 'General',
       compartida: indices.compartida >= 0 ? columnas[indices.compartida] || 'No' : 'No',
+      tipo: indices.tipo >= 0 ? columnas[indices.tipo] || 'Aula' : 'Aula',
       origen: 'csv',
     };
   });
@@ -295,14 +298,19 @@ function calcularHorarioPorAnio(clases, turno) {
 
   return Object.entries(clasesPorAnio).map(([anio, clasesAnio]) => {
     const cursoresPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, minutosDesdeHora(turno.horaInicio)]));
+    const cargaPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, 0]));
     const bloques = [];
 
-    clasesAnio.forEach((clase, idx) => {
-      const dia = diasOrdenados[idx % diasOrdenados.length];
-      let cursor = cursoresPorDia[dia];
+    clasesAnio.forEach((clase) => {
       const bloquesNecesarios = Math.max(1, Math.ceil(clase.creditos / turno.creditosBloque));
 
       for (let i = 0; i < bloquesNecesarios; i += 1) {
+        const dia = [...diasOrdenados].sort((a, b) => {
+          if (cargaPorDia[a] === cargaPorDia[b]) return (prioridades.get(a) || 999) - (prioridades.get(b) || 999);
+          return cargaPorDia[a] - cargaPorDia[b];
+        })[0];
+
+        let cursor = cursoresPorDia[dia];
         const finTentativo = cursor + turno.minutosBloque;
         if (cursor < recesoFin && finTentativo > recesoInicio) cursor = recesoFin;
         if (cursor < almuerzoFin && finTentativo > almuerzoInicio) cursor = almuerzoFin;
@@ -317,11 +325,12 @@ function calcularHorarioPorAnio(clases, turno) {
           clase: clase.clase,
           creditos: clase.creditos,
           categorias: clase.categorias,
+          tipo: clase.tipo || 'Aula',
         });
 
-        cursor = fin;
+        cursoresPorDia[dia] = fin;
+        cargaPorDia[dia] += turno.minutosBloque;
       }
-      cursoresPorDia[dia] = cursor;
     });
 
     return { anio, bloques };
@@ -339,7 +348,7 @@ function renderHorarios(generacion) {
     .map(({ anio, bloques }) => {
       if (!bloques.length) return `<li><strong>Año ${anio}</strong><span>Sin clases asignadas.</span></li>`;
       const detalle = bloques
-        .map((bloque) => `${bloque.dia} ${bloque.inicio}-${bloque.fin}: ${bloque.clase} (${bloque.creditos} cr)`)
+        .map((bloque) => `${bloque.dia} ${bloque.inicio}-${bloque.fin}: ${bloque.clase} (${bloque.creditos} cr, ${bloque.tipo})`)
         .join(' · ');
       return `<li><strong>Año ${anio}</strong><span>${detalle}</span></li>`;
     })
@@ -389,6 +398,7 @@ function agregarClaseManual() {
     creditos: Number(document.getElementById('creditosManual').value),
     categorias: document.getElementById('categoriasManual').value.trim() || 'General',
     compartida: 'No',
+    tipo: document.getElementById('tipoManual').value.trim() || 'Aula',
     origen: 'manual',
   };
 
@@ -533,6 +543,7 @@ turnoForm.addEventListener('submit', (event) => {
 
   turnoForm.reset();
   document.getElementById('horaInicio').value = '08:00';
+  document.getElementById('minutosBloque').value = '45';
   renderTurnos();
   llenarTurnos();
   renderPeriodos();
@@ -542,7 +553,7 @@ turnoForm.addEventListener('submit', (event) => {
 periodoForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const turno = turnoPeriodo.value;
-  const periodo = document.getElementById('nombrePeriodo').value.trim();
+  const periodo = document.getElementById('nombrePeriodo').value;
   if (!turno || !periodo) return;
 
   if (!estado.periodosPorTurno[turno]) estado.periodosPorTurno[turno] = [];
@@ -622,19 +633,34 @@ reiniciarHorarios.addEventListener('click', () => {
 
 descargarPlantillaCsv.addEventListener('click', () => {
   const plantilla =
-    'clase,año,créditos,categorías,compartida\n' +
-    'Cálculo I,1,4,Matemática,No\n' +
-    'Programación I,1,5,Programación,No\n' +
-    'Física General,2,4,Ciencias,Sí';
+    'clase,año,credito,categoria,compartida,tipo\n' +
+    'Cálculo I,1,4,Matemática,No,Aula\n' +
+    'Programación I,1,5,Programación,No,Laboratorio\n' +
+    'Física General,2,4,Ciencias,Sí,Taller';
   descargarCSV('plantilla_clases.csv', plantilla);
 });
 
 exportarHorarioCsv.addEventListener('click', () => {
   if (!estado.vistaActual?.horarioPorAnio?.length) return;
-  const filas = ['año,día,inicio,fin,clase,créditos,categorías'];
+  const filas = ['clase,año,credito,categoria,compartida,tipo,día,inicio,fin'];
   estado.vistaActual.horarioPorAnio.forEach(({ anio, bloques }) => {
     bloques.forEach((bloque) => {
-      filas.push([anio, bloque.dia, bloque.inicio, bloque.fin, bloque.clase, bloque.creditos, bloque.categorias].join(','));
+      const claseOriginal = (estado.clasesPorCarrera[claveCarrera(estado.vistaActual.coordinacion, estado.vistaActual.carrera)] || []).find(
+        (item) => item.clase === bloque.clase && item.anio === anio
+      );
+      filas.push(
+        [
+          bloque.clase,
+          anio,
+          bloque.creditos,
+          bloque.categorias,
+          claseOriginal?.compartida || 'No',
+          bloque.tipo || claseOriginal?.tipo || 'Aula',
+          bloque.dia,
+          bloque.inicio,
+          bloque.fin,
+        ].join(',')
+      );
     });
   });
   descargarCSV(`horario_${estado.vistaActual.carrera}_${estado.vistaActual.turno}_${estado.vistaActual.periodo}.csv`, filas.join('\n'));
