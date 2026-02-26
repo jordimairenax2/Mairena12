@@ -15,6 +15,7 @@ const DIAS_TABLA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 const DURACION_CLASE_MINUTOS = 45;
 const HORA_INICIO_JORNADA = '08:00';
 const HORA_FIN_JORNADA = '14:00';
+const CLASES_POR_DIA = 4;
 
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabPanels = document.querySelectorAll('.tab-panel');
@@ -175,8 +176,16 @@ function parseCSV(texto) {
   });
 
   const clasesValidas = clases.filter((clase) => clase.clase && clase.anio && clase.creditos > 0);
-  if (!clasesValidas.length) return { clases: [], error: 'No hay filas válidas.' };
-  return { clases: clasesValidas, error: '' };
+  const clasesUnicas = Array.from(
+    new Map(
+      clasesValidas.map((clase) => {
+        const key = `${clase.anio}::${clase.clase.toLowerCase().trim()}`;
+        return [key, clase];
+      })
+    ).values()
+  );
+  if (!clasesUnicas.length) return { clases: [], error: 'No hay filas válidas.' };
+  return { clases: clasesUnicas, error: '' };
 }
 
 function renderCoordinaciones() {
@@ -332,9 +341,7 @@ function construirBloquesTurno(turno) {
 function calcularHorarioPorAnio(clases, turno) {
   const prioridades = new Map(turno.prioridades.map((item) => [item.dia, item.prioridad]));
   const diasOrdenados = [...turno.dias].sort((a, b) => (prioridades.get(a) || 999) - (prioridades.get(b) || 999));
-  const duracionBloque = DURACION_CLASE_MINUTOS;
-  const bloquesDia = obtenerBloquesDisponibles(turno);
-  const maxBloquesPorDia = bloquesDia.length;
+  const bloquesDia = obtenerBloquesDisponibles(turno).slice(0, CLASES_POR_DIA);
 
   const clasesPorAnio = ANIOS_BASE.reduce((acc, anio) => ({ ...acc, [anio]: [] }), {});
   clases.forEach((clase) => {
@@ -343,32 +350,30 @@ function calcularHorarioPorAnio(clases, turno) {
   });
 
   return Object.entries(clasesPorAnio).map(([anio, clasesAnio]) => {
-    const indicesBloquePorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, 0]));
-    const cargaPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, 0]));
+    if (!clasesAnio.length) return { anio, bloques: [] };
+
     const bloques = [];
-    const repeticionesPorDia = {};
+    let indiceRotacion = 0;
 
-    clasesAnio.forEach((clase) => {
-      const bloquesNecesarios = Math.max(1, Math.ceil(clase.creditos / turno.creditosBloque));
-      repeticionesPorDia[clase.clase] = repeticionesPorDia[clase.clase] || {};
+    const seleccionarClase = (clasesUsadas) => {
+      const total = clasesAnio.length;
+      for (let i = 0; i < total; i += 1) {
+        const idx = (indiceRotacion + i) % total;
+        const candidata = clasesAnio[idx];
+        if (!clasesUsadas.has(candidata.clase) || clasesUsadas.size >= total) {
+          indiceRotacion = (idx + 1) % total;
+          return candidata;
+        }
+      }
+      const fallback = clasesAnio[indiceRotacion++ % total];
+      return fallback;
+    };
 
-      for (let i = 0; i < bloquesNecesarios; i += 1) {
-        const disponibles = diasOrdenados.filter((dia) => {
-          const actualDia = repeticionesPorDia[clase.clase][dia] || 0;
-          const tieneEspacio = indicesBloquePorDia[dia] < maxBloquesPorDia;
-          return actualDia < turno.maxRepeticionesDia && tieneEspacio;
-        });
-
-        if (!disponibles.length) return;
-
-        const candidatos = disponibles.length ? disponibles : diasOrdenados;
-        const dia = [...candidatos].sort((a, b) => {
-          if (cargaPorDia[a] === cargaPorDia[b]) return (prioridades.get(a) || 999) - (prioridades.get(b) || 999);
-          return cargaPorDia[a] - cargaPorDia[b];
-        })[0];
-
-        const bloqueTurno = bloquesDia[indicesBloquePorDia[dia]];
-        if (!bloqueTurno) return;
+    diasOrdenados.forEach((dia) => {
+      const clasesUsadas = new Set();
+      bloquesDia.forEach((bloqueTurno) => {
+        const clase = seleccionarClase(clasesUsadas);
+        clasesUsadas.add(clase.clase);
 
         bloques.push({
           dia,
@@ -379,88 +384,16 @@ function calcularHorarioPorAnio(clases, turno) {
           categorias: clase.categorias,
           tipo: clase.tipo || 'Aula',
         });
-
-        indicesBloquePorDia[dia] += 1;
-        cargaPorDia[dia] += duracionBloque;
-        repeticionesPorDia[clase.clase][dia] = (repeticionesPorDia[clase.clase][dia] || 0) + 1;
-      }
+      });
     });
 
-    const bloquesCompletos = completarBloquesSinHuecos(bloques, clasesAnio, turno, diasOrdenados);
-    return { anio, bloques: bloquesCompletos };
-  });
-}
-
-function completarBloquesSinHuecos(bloques, clasesAnio, turno, diasOrdenados) {
-  if (!clasesAnio.length) return bloques;
-
-  const base = construirBloquesTurno(turno);
-  if (!base.length) return bloques;
-
-  const mapa = new Map(bloques.map((bloque) => [`${bloque.dia}::${bloque.inicio}`, bloque]));
-  const clasesDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, new Set()]));
-  const ultimaClaseDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, '']));
-  let indiceRotacion = 0;
-
-  bloques.forEach((bloque) => {
-    clasesDia[bloque.dia]?.add(bloque.clase);
-    ultimaClaseDia[bloque.dia] = bloque.clase;
-  });
-
-  const elegirClase = (dia) => {
-    const usadas = clasesDia[dia] || new Set();
-    const ultima = ultimaClaseDia[dia] || '';
-
-    const buscar = (predicado) => {
-      for (let i = 0; i < clasesAnio.length; i += 1) {
-        const idx = (indiceRotacion + i) % clasesAnio.length;
-        const clase = clasesAnio[idx];
-        if (predicado(clase)) {
-          indiceRotacion = (idx + 1) % clasesAnio.length;
-          return clase;
-        }
-      }
-      return null;
-    };
-
-    return (
-      buscar((clase) => !usadas.has(clase.clase) && clase.clase !== ultima) ||
-      buscar((clase) => clase.clase !== ultima) ||
-      clasesAnio[indiceRotacion++ % clasesAnio.length]
-    );
-  };
-
-  diasOrdenados.forEach((dia) => {
-    base.forEach((bloqueBase) => {
-      const key = `${dia}::${bloqueBase.inicio}`;
-      if (mapa.has(key)) return;
-
-      const clase = elegirClase(dia);
-      const nuevoBloque = {
-        dia,
-        inicio: bloqueBase.inicio,
-        fin: bloqueBase.fin,
-        clase: clase.clase,
-        creditos: clase.creditos,
-        categorias: clase.categorias,
-        tipo: clase.tipo || 'Aula',
-      };
-
-      mapa.set(key, nuevoBloque);
-      clasesDia[dia].add(clase.clase);
-      ultimaClaseDia[dia] = clase.clase;
-    });
-  });
-
-  return Array.from(mapa.values()).sort((a, b) => {
-    if (a.dia === b.dia) return minutosDesdeHora(a.inicio) - minutosDesdeHora(b.inicio);
-    return diasOrdenados.indexOf(a.dia) - diasOrdenados.indexOf(b.dia);
+    return { anio, bloques };
   });
 }
 
 function renderTablaHorario(generacion) {
   const turno = estado.turnos.find((t) => t.nombre === (generacion?.turno || filtroTurno.value || turnoGeneracion.value));
-  const bloquesBase = construirBloquesTurno(turno);
+  const bloquesBase = construirBloquesTurno(turno).slice(0, CLASES_POR_DIA);
   if (!bloquesBase.length) {
     tablaHorarioBody.innerHTML = '<tr><td colspan="6">Configura un turno para ver la tabla.</td></tr>';
     return;
