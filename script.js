@@ -371,7 +371,75 @@ function calcularHorarioPorAnio(clases, turno) {
       }
     });
 
-    return { anio, bloques };
+    const bloquesCompletos = completarBloquesSinHuecos(bloques, clasesAnio, turno, diasOrdenados);
+    return { anio, bloques: bloquesCompletos };
+  });
+}
+
+function completarBloquesSinHuecos(bloques, clasesAnio, turno, diasOrdenados) {
+  if (!clasesAnio.length) return bloques;
+
+  const base = construirBloquesTurno(turno, 8);
+  if (!base.length) return bloques;
+
+  const mapa = new Map(bloques.map((bloque) => [`${bloque.dia}::${bloque.inicio}`, bloque]));
+  const clasesDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, new Set()]));
+  const ultimaClaseDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, '']));
+  let indiceRotacion = 0;
+
+  bloques.forEach((bloque) => {
+    clasesDia[bloque.dia]?.add(bloque.clase);
+    ultimaClaseDia[bloque.dia] = bloque.clase;
+  });
+
+  const elegirClase = (dia) => {
+    const usadas = clasesDia[dia] || new Set();
+    const ultima = ultimaClaseDia[dia] || '';
+
+    const buscar = (predicado) => {
+      for (let i = 0; i < clasesAnio.length; i += 1) {
+        const idx = (indiceRotacion + i) % clasesAnio.length;
+        const clase = clasesAnio[idx];
+        if (predicado(clase)) {
+          indiceRotacion = (idx + 1) % clasesAnio.length;
+          return clase;
+        }
+      }
+      return null;
+    };
+
+    return (
+      buscar((clase) => !usadas.has(clase.clase) && clase.clase !== ultima) ||
+      buscar((clase) => clase.clase !== ultima) ||
+      clasesAnio[indiceRotacion++ % clasesAnio.length]
+    );
+  };
+
+  diasOrdenados.forEach((dia) => {
+    base.forEach((bloqueBase) => {
+      const key = `${dia}::${bloqueBase.inicio}`;
+      if (mapa.has(key)) return;
+
+      const clase = elegirClase(dia);
+      const nuevoBloque = {
+        dia,
+        inicio: bloqueBase.inicio,
+        fin: bloqueBase.fin,
+        clase: clase.clase,
+        creditos: clase.creditos,
+        categorias: clase.categorias,
+        tipo: clase.tipo || 'Aula',
+      };
+
+      mapa.set(key, nuevoBloque);
+      clasesDia[dia].add(clase.clase);
+      ultimaClaseDia[dia] = clase.clase;
+    });
+  });
+
+  return Array.from(mapa.values()).sort((a, b) => {
+    if (a.dia === b.dia) return minutosDesdeHora(a.inicio) - minutosDesdeHora(b.inicio);
+    return diasOrdenados.indexOf(a.dia) - diasOrdenados.indexOf(b.dia);
   });
 }
 
@@ -383,10 +451,12 @@ function renderTablaHorario(generacion) {
     return;
   }
 
-  const bloquesAnio1 = generacion?.horarioPorAnio?.find((h) => h.anio === '1')?.bloques || [];
-  const filas = bloquesBase.map((bloque, idx) => {
+  const bloquesPrioritarios = generacion?.horarioPorAnio
+    ?.slice()
+    .sort((a, b) => b.bloques.length - a.bloques.length)?.[0]?.bloques || [];
+  const filas = bloquesBase.map((bloque) => {
     const celdasDia = DIAS_TABLA.map((dia) => {
-      const clase = bloquesAnio1.find((b) => b.dia === dia && b.inicio === bloque.inicio);
+      const clase = bloquesPrioritarios.find((b) => b.dia === dia && b.inicio === bloque.inicio);
       return `<td>${clase ? clase.clase : '-'}</td>`;
     }).join('');
     return `<tr><td>${bloque.etiqueta}<br><small>${bloque.inicio}-${bloque.fin}</small></td>${celdasDia}</tr>`;
