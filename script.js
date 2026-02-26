@@ -11,6 +11,7 @@ const estado = {
 
 const ANIOS_BASE = ['1', '2', '3', '4', '5'];
 const PRIORIDAD_DEFAULT = 'Lunes:1,Martes:2,Miércoles:3,Jueves:4,Viernes:5';
+const DIAS_TABLA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabPanels = document.querySelectorAll('.tab-panel');
@@ -23,16 +24,23 @@ const periodoForm = document.getElementById('periodoForm');
 const adjuntarClasesForm = document.getElementById('adjuntarClasesForm');
 const generarHorarioForm = document.getElementById('generarHorarioForm');
 const claseManualForm = document.getElementById('claseManualForm');
+const cambiarClaseForm = document.getElementById('cambiarClaseForm');
 
 const coordinacionPrincipal = document.getElementById('coordinacionPrincipal');
 const carreraPrincipal = document.getElementById('carreraPrincipal');
 const turnoPrincipal = document.getElementById('turnoPrincipal');
 const periodoPrincipal = document.getElementById('periodoPrincipal');
+const coordinacionGeneracion = document.getElementById('coordinacionGeneracion');
+const carreraGeneracion = document.getElementById('carreraGeneracion');
+const turnoGeneracion = document.getElementById('turnoGeneracion');
 
 const coordinacionAdjunta = document.getElementById('coordinacionAdjunta');
 const carreraAdjunta = document.getElementById('carreraAdjunta');
+const turnoAdjunta = document.getElementById('turnoAdjunta');
 const csvClases = document.getElementById('csvClases');
 const estadoCsvUpload = document.getElementById('estadoCsvUpload');
+const estadoImportacion = document.getElementById('estadoImportacion');
+const estadoGeneracion = document.getElementById('estadoGeneracion');
 
 const filtroCoordinacion = document.getElementById('filtroCoordinacion');
 const filtroCarrera = document.getElementById('filtroCarrera');
@@ -46,6 +54,8 @@ const listaPeriodos = document.getElementById('listaPeriodos');
 const listaClasesAdjuntas = document.getElementById('listaClasesAdjuntas');
 const listaHorarios = document.getElementById('listaHorarios');
 const resumen = document.getElementById('resumen');
+const tablaClasesBody = document.getElementById('tablaClasesBody');
+const tablaHorarioBody = document.getElementById('tablaHorarioBody');
 
 const descargarPlantillaCsv = document.getElementById('descargarPlantillaCsv');
 const exportarHorarioCsv = document.getElementById('exportarHorarioCsv');
@@ -53,6 +63,7 @@ const verHorarioFiltrado = document.getElementById('verHorarioFiltrado');
 const reiniciarHorarios = document.getElementById('reiniciarHorarios');
 const estadoClaseManual = document.getElementById('estadoClaseManual');
 const turnoPeriodo = document.getElementById('turnoPeriodo');
+const claseExistenteSelect = document.getElementById('claseExistenteSelect');
 
 function claveCarrera(coordinacion, carrera) {
   return `${coordinacion}::${carrera}`;
@@ -69,9 +80,7 @@ function minutosDesdeHora(horaTexto) {
 }
 
 function horaDesdeMinutos(totalMinutos) {
-  const horas = Math.floor(totalMinutos / 60)
-    .toString()
-    .padStart(2, '0');
+  const horas = Math.floor(totalMinutos / 60).toString().padStart(2, '0');
   const minutos = (totalMinutos % 60).toString().padStart(2, '0');
   return `${horas}:${minutos}`;
 }
@@ -131,21 +140,10 @@ function parseLineaCSV(linea) {
 }
 
 function parseCSV(texto) {
-  const lineas = texto
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .map((linea) => linea.trim())
-    .filter(Boolean);
-
+  const lineas = texto.replace(/^\uFEFF/, '').split(/\r?\n/).map((linea) => linea.trim()).filter(Boolean);
   if (!lineas.length) return { clases: [], error: 'El CSV está vacío.' };
 
-  const normalizar = (valor) =>
-    valor
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
-
+  const normalizar = (valor) => valor.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   const encabezados = parseLineaCSV(lineas[0]).map((h) => normalizar(h));
   const indiceDesdeOpciones = (...opciones) => encabezados.findIndex((header) => opciones.includes(header));
   const indices = {
@@ -157,9 +155,7 @@ function parseCSV(texto) {
     tipo: indiceDesdeOpciones('tipo'),
   };
 
-  const faltantes = Object.entries(indices)
-    .filter(([campo, idx]) => campo !== 'compartida' && idx < 0)
-    .map(([campo]) => campo);
+  const faltantes = Object.entries(indices).filter(([campo, idx]) => campo !== 'compartida' && idx < 0).map(([campo]) => campo);
   if (faltantes.length) return { clases: [], error: `Faltan columnas: ${faltantes.join(', ')}` };
 
   const clases = lineas.slice(1).map((linea) => {
@@ -199,7 +195,8 @@ function renderDocentes() {
 function renderTurnos() {
   listaTurnos.innerHTML = estado.turnos
     .map(
-      (turno) => `<li><strong>${turno.nombre}</strong><span>Días: ${turno.dias.join(', ')}</span><span>Prioridad: ${turno.prioridadTexto}</span><span>Inicio: ${turno.horaInicio}</span></li>`
+      (turno) =>
+        `<li><strong>${turno.nombre}</strong><span>Días: ${turno.dias.join(', ')}</span><span>Máx semana: ${turno.maxRepeticionesSemana} · Máx día: ${turno.maxRepeticionesDia}</span></li>`
     )
     .join('');
 }
@@ -214,16 +211,36 @@ function renderPeriodos() {
   listaPeriodos.innerHTML = items.join('') || '<li><span>No hay periodos configurados.</span></li>';
 }
 
+function docentePreferido(categoria) {
+  const c = categoria?.toLowerCase().trim();
+  const docente = estado.docentes.find((d) => d.categorias.some((dc) => dc.toLowerCase() === c));
+  return docente?.nombre || 'Sin asignar';
+}
+
+function renderTablaClases() {
+  const filas = Object.entries(estado.clasesPorCarrera).flatMap(([clave, clases]) => {
+    const [coordinacion, carrera] = clave.split('::');
+    return clases.map((clase) => {
+      const caracteristicas = `${(clase.tipo || 'aula').toLowerCase()} · ${clase.compartida || 'No compartida'} · Sesiones:${Math.max(1, clase.creditos)} · Año:${clase.anio}`;
+      return `<tr><td>${coordinacion}</td><td>${carrera}</td><td>${clase.clase}</td><td>${caracteristicas}</td><td>${docentePreferido(
+        clase.categorias
+      )}</td><td>${clase.categorias}</td></tr>`;
+    });
+  });
+  tablaClasesBody.innerHTML = filas.join('') || '<tr><td colspan="6">Sin clases cargadas.</td></tr>';
+}
+
 function renderClasesAdjuntas() {
   const entradas = Object.entries(estado.clasesPorCarrera);
   listaClasesAdjuntas.innerHTML =
     entradas
       .map(([clave, clases]) => {
         const [coordinacion, carrera] = clave.split('::');
-        const aniosCsv = [...new Set(clases.filter((c) => c.origen === 'csv').map((c) => c.anio))].sort();
-        return `<li><strong>${coordinacion} / ${carrera}</strong><span>${clases.length} clase(s). Años CSV: ${aniosCsv.join(', ') || 'ninguno'}</span></li>`;
+        return `<li><strong>${coordinacion} / ${carrera}</strong><span>${clases.length} clase(s) cargadas.</span></li>`;
       })
       .join('') || '<li><span>Aún no hay clases adjuntas.</span></li>';
+  renderTablaClases();
+  actualizarSelectorClasesExistentes();
 }
 
 function renderResumen() {
@@ -242,44 +259,53 @@ function mostrarError(texto) {
 }
 
 function llenarCoordinaciones() {
-  const options =
-    '<option value="">Selecciona una coordinación</option>' +
-    Object.keys(estado.coordinaciones)
-      .map((coord) => `<option value="${coord}">${coord}</option>`)
-      .join('');
-  [coordinacionPrincipal, coordinacionAdjunta, filtroCoordinacion].forEach((el) => {
+  const options = '<option value="">Selecciona una coordinación</option>' + Object.keys(estado.coordinaciones).map((coord) => `<option value="${coord}">${coord}</option>`).join('');
+  [coordinacionPrincipal, coordinacionAdjunta, filtroCoordinacion, coordinacionGeneracion].forEach((el) => {
     el.innerHTML = options;
   });
 }
 
 function llenarCarreras(selectCoord, selectCarrera) {
   const carreras = estado.coordinaciones[selectCoord.value] || [];
-  selectCarrera.innerHTML =
-    '<option value="">Selecciona una carrera</option>' +
-    carreras.map((carrera) => `<option value="${carrera}">${carrera}</option>`).join('');
+  selectCarrera.innerHTML = '<option value="">Selecciona una carrera</option>' + carreras.map((carrera) => `<option value="${carrera}">${carrera}</option>`).join('');
 }
 
 function llenarTurnos() {
-  const options =
-    '<option value="">Selecciona un turno</option>' +
-    estado.turnos.map((turno) => `<option value="${turno.nombre}">${turno.nombre}</option>`).join('');
-  [turnoPrincipal, filtroTurno, turnoPeriodo].forEach((el) => {
+  const options = '<option value="">Selecciona un turno</option>' + estado.turnos.map((turno) => `<option value="${turno.nombre}">${turno.nombre}</option>`).join('');
+  [turnoPrincipal, filtroTurno, turnoPeriodo, turnoAdjunta, turnoGeneracion].forEach((el) => {
     el.innerHTML = options;
   });
   llenarPeriodosPrincipal();
 }
 
 function llenarCategoriasDocente() {
-  document.getElementById('categoriasDocente').innerHTML = estado.categorias
-    .map((categoria) => `<option value="${categoria}">${categoria}</option>`)
-    .join('');
+  document.getElementById('categoriasDocente').innerHTML = estado.categorias.map((categoria) => `<option value="${categoria}">${categoria}</option>`).join('');
 }
 
 function llenarPeriodosPrincipal() {
-  const periodos = estado.periodosPorTurno[turnoPrincipal.value] || [];
-  periodoPrincipal.innerHTML =
-    '<option value="">Selecciona un periodo</option>' +
-    periodos.map((periodo) => `<option value="${periodo}">${periodo}</option>`).join('');
+  const periodos = estado.periodosPorTurno[turnoGeneracion.value] || [];
+  periodoPrincipal.innerHTML = '<option value="">Selecciona un periodo</option>' + periodos.map((periodo) => `<option value="${periodo}">${periodo}</option>`).join('');
+}
+
+function construirBloquesTurno(turno, cantidad = 8) {
+  if (!turno) return [];
+  const bloques = [];
+  const recesoInicio = minutosDesdeHora(turno.horaReceso);
+  const recesoFin = recesoInicio + turno.duracionReceso;
+  const almuerzoInicio = minutosDesdeHora(turno.horaAlmuerzo);
+  const almuerzoFin = almuerzoInicio + turno.duracionAlmuerzo;
+  let cursor = minutosDesdeHora(turno.horaInicio);
+
+  for (let i = 0; i < cantidad; i += 1) {
+    const finTentativo = cursor + turno.minutosBloque;
+    if (cursor < recesoFin && finTentativo > recesoInicio) cursor = recesoFin;
+    if (cursor < almuerzoFin && finTentativo > almuerzoInicio) cursor = almuerzoFin;
+    const inicio = cursor;
+    const fin = cursor + turno.minutosBloque;
+    bloques.push({ etiqueta: `${turno.nombre[0] || 'B'}${i + 1}`, inicio: horaDesdeMinutos(inicio), fin: horaDesdeMinutos(fin) });
+    cursor = fin;
+  }
+  return bloques;
 }
 
 function calcularHorarioPorAnio(clases, turno) {
@@ -300,12 +326,22 @@ function calcularHorarioPorAnio(clases, turno) {
     const cursoresPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, minutosDesdeHora(turno.horaInicio)]));
     const cargaPorDia = Object.fromEntries(diasOrdenados.map((dia) => [dia, 0]));
     const bloques = [];
+    const repeticionesSemana = {};
+    const repeticionesPorDia = {};
 
     clasesAnio.forEach((clase) => {
       const bloquesNecesarios = Math.max(1, Math.ceil(clase.creditos / turno.creditosBloque));
+      repeticionesSemana[clase.clase] = 0;
+      repeticionesPorDia[clase.clase] = repeticionesPorDia[clase.clase] || {};
 
       for (let i = 0; i < bloquesNecesarios; i += 1) {
-        const dia = [...diasOrdenados].sort((a, b) => {
+        const disponibles = diasOrdenados.filter((dia) => {
+          const actualDia = repeticionesPorDia[clase.clase][dia] || 0;
+          return actualDia < turno.maxRepeticionesDia && repeticionesSemana[clase.clase] < turno.maxRepeticionesSemana;
+        });
+
+        const candidatos = disponibles.length ? disponibles : diasOrdenados;
+        const dia = [...candidatos].sort((a, b) => {
           if (cargaPorDia[a] === cargaPorDia[b]) return (prioridades.get(a) || 999) - (prioridades.get(b) || 999);
           return cargaPorDia[a] - cargaPorDia[b];
         })[0];
@@ -330,6 +366,8 @@ function calcularHorarioPorAnio(clases, turno) {
 
         cursoresPorDia[dia] = fin;
         cargaPorDia[dia] += turno.minutosBloque;
+        repeticionesSemana[clase.clase] += 1;
+        repeticionesPorDia[clase.clase][dia] = (repeticionesPorDia[clase.clase][dia] || 0) + 1;
       }
     });
 
@@ -337,29 +375,48 @@ function calcularHorarioPorAnio(clases, turno) {
   });
 }
 
+function renderTablaHorario(generacion) {
+  const turno = estado.turnos.find((t) => t.nombre === (generacion?.turno || filtroTurno.value || turnoGeneracion.value));
+  const bloquesBase = construirBloquesTurno(turno, 8);
+  if (!bloquesBase.length) {
+    tablaHorarioBody.innerHTML = '<tr><td colspan="6">Configura un turno para ver la tabla.</td></tr>';
+    return;
+  }
+
+  const bloquesAnio1 = generacion?.horarioPorAnio?.find((h) => h.anio === '1')?.bloques || [];
+  const filas = bloquesBase.map((bloque, idx) => {
+    const celdasDia = DIAS_TABLA.map((dia) => {
+      const clase = bloquesAnio1.find((b) => b.dia === dia && b.inicio === bloque.inicio);
+      return `<td>${clase ? clase.clase : '-'}</td>`;
+    }).join('');
+    return `<tr><td>${bloque.etiqueta}<br><small>${bloque.inicio}-${bloque.fin}</small></td>${celdasDia}</tr>`;
+  });
+  tablaHorarioBody.innerHTML = filas.join('');
+}
+
 function renderHorarios(generacion) {
   if (!generacion?.horarioPorAnio?.length) {
     mostrarError('No hay horario para mostrar.');
     exportarHorarioCsv.disabled = true;
+    renderTablaHorario(null);
     return;
   }
 
   listaHorarios.innerHTML = generacion.horarioPorAnio
     .map(({ anio, bloques }) => {
       if (!bloques.length) return `<li><strong>Año ${anio}</strong><span>Sin clases asignadas.</span></li>`;
-      const detalle = bloques
-        .map((bloque) => `${bloque.dia} ${bloque.inicio}-${bloque.fin}: ${bloque.clase} (${bloque.creditos} cr, ${bloque.tipo})`)
-        .join(' · ');
+      const detalle = bloques.map((bloque) => `${bloque.dia} ${bloque.inicio}-${bloque.fin}: ${bloque.clase}`).join(' · ');
       return `<li><strong>Año ${anio}</strong><span>${detalle}</span></li>`;
     })
     .join('');
   exportarHorarioCsv.disabled = false;
+  renderTablaHorario(generacion);
 }
 
 function generarHorarioSeleccionActual() {
-  const coordinacion = coordinacionPrincipal.value;
-  const carrera = carreraPrincipal.value;
-  const turnoNombre = turnoPrincipal.value;
+  const coordinacion = coordinacionGeneracion.value;
+  const carrera = carreraGeneracion.value;
+  const turnoNombre = turnoGeneracion.value;
   const periodo = periodoPrincipal.value;
   const turno = estado.turnos.find((item) => item.nombre === turnoNombre);
 
@@ -375,11 +432,19 @@ function generarHorarioSeleccionActual() {
   }
 
   const horarioPorAnio = calcularHorarioPorAnio(clases, turno);
-  const horario = { coordinacion, carrera, turno: turnoNombre, periodo, horarioPorAnio };
+  const horario = { coordinacion, carrera, turno: turnoNombre, periodo, anioTrazabilidad: document.getElementById('anioTrazabilidad').value, horarioPorAnio };
   estado.horariosGenerados[claveHorario(coordinacion, carrera, turnoNombre, periodo)] = horario;
   estado.vistaActual = horario;
   renderHorarios(horario);
+  estadoGeneracion.textContent = 'Horario generado automáticamente.';
   renderResumen();
+}
+
+function actualizarSelectorClasesExistentes() {
+  const coordinacion = coordinacionPrincipal.value;
+  const carrera = carreraPrincipal.value;
+  const clases = estado.clasesPorCarrera[claveCarrera(coordinacion, carrera)] || [];
+  claseExistenteSelect.innerHTML = '<option value="">Selecciona una clase</option>' + clases.map((clase, idx) => `<option value="${idx}">${clase.clase} (Año ${clase.anio})</option>`).join('');
 }
 
 function agregarClaseManual() {
@@ -397,7 +462,7 @@ function agregarClaseManual() {
     clase: document.getElementById('claseManual').value.trim(),
     creditos: Number(document.getElementById('creditosManual').value),
     categorias: document.getElementById('categoriasManual').value.trim() || 'General',
-    compartida: 'No',
+    compartida: 'No compartida',
     tipo: document.getElementById('tipoManual').value.trim() || 'Aula',
     origen: 'manual',
   };
@@ -406,28 +471,9 @@ function agregarClaseManual() {
 
   const clave = claveCarrera(coordinacion, carrera);
   if (!estado.clasesPorCarrera[clave]) estado.clasesPorCarrera[clave] = [];
-
-  const turno = estado.turnos.find((item) => item.nombre === turnoPrincipal.value);
-  const periodo = periodoPrincipal.value;
-  const horarioExistente = turno && periodo ? estado.horariosGenerados[claveHorario(coordinacion, carrera, turno.nombre, periodo)] : null;
-
-  if (horarioExistente) {
-    const bloquesAnio = horarioExistente.horarioPorAnio.find((h) => h.anio === nuevaClase.anio)?.bloques || [];
-    if (bloquesAnio.length) {
-      const confirmar = window.confirm(
-        `Ya existe horario en el año ${nuevaClase.anio} para ${carrera} (${coordinacion}). Al regenerar se reemplazará lo actual en los bloques correspondientes. ¿Continuar?`
-      );
-      if (!confirmar) return;
-    }
-  }
-
   estado.clasesPorCarrera[clave].push(nuevaClase);
   estadoClaseManual.textContent = `Clase manual agregada al año ${nuevaClase.anio} de ${carrera} (${coordinacion}).`;
   estadoClaseManual.classList.remove('error-msg');
-
-  if (turno && periodo) {
-    generarHorarioSeleccionActual();
-  }
 
   renderClasesAdjuntas();
   renderResumen();
@@ -435,11 +481,31 @@ function agregarClaseManual() {
   document.getElementById('anioManual').value = '1';
 }
 
+function cambiarClaseExistente() {
+  const coordinacion = coordinacionPrincipal.value;
+  const carrera = carreraPrincipal.value;
+  const idx = Number(claseExistenteSelect.value);
+  const clave = claveCarrera(coordinacion, carrera);
+  const clases = estado.clasesPorCarrera[clave] || [];
+  if (Number.isNaN(idx) || idx < 0 || !clases[idx]) return;
+
+  const nuevoNombre = document.getElementById('nuevoNombreClase').value.trim();
+  const nuevosCreditos = Number(document.getElementById('nuevosCreditosClase').value);
+  if (nuevoNombre) clases[idx].clase = nuevoNombre;
+  if (nuevosCreditos > 0) clases[idx].creditos = nuevosCreditos;
+
+  estadoClaseManual.textContent = 'Clase actualizada correctamente.';
+  estadoClaseManual.classList.remove('error-msg');
+  cambiarClaseForm.reset();
+  renderClasesAdjuntas();
+}
+
 function verHorarioConFiltros() {
   const clave = claveHorario(filtroCoordinacion.value, filtroCarrera.value, filtroTurno.value, periodoPrincipal.value);
   const horario = estado.horariosGenerados[clave];
   if (!horario) {
     mostrarError('No existe un horario generado para esos filtros (y periodo activo).');
+    renderTablaHorario(null);
     return;
   }
   estado.vistaActual = horario;
@@ -452,7 +518,8 @@ function init() {
   renderClasesAdjuntas();
   renderPeriodos();
   renderResumen();
-  estadoCsvUpload.textContent = 'Aún no seleccionas un archivo CSV.';
+  estadoCsvUpload.textContent = 'Ningún archivo seleccionado';
+  renderTablaHorario(null);
 }
 
 tabButtons.forEach((button) => {
@@ -465,14 +532,19 @@ tabButtons.forEach((button) => {
   });
 });
 
-coordinacionPrincipal.addEventListener('change', () => llenarCarreras(coordinacionPrincipal, carreraPrincipal));
+coordinacionPrincipal.addEventListener('change', () => {
+  llenarCarreras(coordinacionPrincipal, carreraPrincipal);
+  actualizarSelectorClasesExistentes();
+});
 coordinacionAdjunta.addEventListener('change', () => llenarCarreras(coordinacionAdjunta, carreraAdjunta));
 filtroCoordinacion.addEventListener('change', () => llenarCarreras(filtroCoordinacion, filtroCarrera));
-turnoPrincipal.addEventListener('change', llenarPeriodosPrincipal);
+coordinacionGeneracion.addEventListener('change', () => llenarCarreras(coordinacionGeneracion, carreraGeneracion));
+turnoGeneracion.addEventListener('change', llenarPeriodosPrincipal);
+carreraPrincipal.addEventListener('change', actualizarSelectorClasesExistentes);
 
 csvClases.addEventListener('change', () => {
   const archivo = csvClases.files[0];
-  estadoCsvUpload.textContent = archivo ? `Archivo seleccionado: ${archivo.name}` : 'Aún no seleccionas un archivo CSV.';
+  estadoCsvUpload.textContent = archivo ? archivo.name : 'Ningún archivo seleccionado';
 });
 
 generalForm.addEventListener('submit', (event) => {
@@ -508,6 +580,7 @@ docenteForm.addEventListener('submit', (event) => {
   estado.docentes.push({ nombre, categorias });
   docenteForm.reset();
   renderDocentes();
+  renderTablaClases();
 });
 
 turnoForm.addEventListener('submit', (event) => {
@@ -529,6 +602,8 @@ turnoForm.addEventListener('submit', (event) => {
     horaInicio: document.getElementById('horaInicio').value || '08:00',
     minutosBloque: Number(document.getElementById('minutosBloque').value),
     creditosBloque: Number(document.getElementById('creditosBloque').value),
+    maxRepeticionesSemana: Number(document.getElementById('maxRepeticionesSemana').value) || 3,
+    maxRepeticionesDia: Number(document.getElementById('maxRepeticionesDia').value) || 1,
     horaReceso: document.getElementById('horaReceso').value,
     duracionReceso: Number(document.getElementById('duracionReceso').value),
     horaAlmuerzo: document.getElementById('horaAlmuerzo').value,
@@ -544,6 +619,8 @@ turnoForm.addEventListener('submit', (event) => {
   turnoForm.reset();
   document.getElementById('horaInicio').value = '08:00';
   document.getElementById('minutosBloque').value = '45';
+  document.getElementById('maxRepeticionesSemana').value = '3';
+  document.getElementById('maxRepeticionesDia').value = '1';
   renderTurnos();
   llenarTurnos();
   renderPeriodos();
@@ -586,7 +663,7 @@ adjuntarClasesForm.addEventListener('submit', async (event) => {
   const archivo = csvClases.files[0];
   const coordinacion = coordinacionAdjunta.value;
   const carrera = carreraAdjunta.value;
-  if (!archivo || !coordinacion || !carrera) return;
+  if (!archivo || !coordinacion || !carrera || !turnoAdjunta.value) return;
 
   const contenido = await archivo.text();
   const { clases, error } = parseCSV(contenido);
@@ -600,10 +677,21 @@ adjuntarClasesForm.addEventListener('submit', async (event) => {
   estado.clasesPorCarrera[clave] = [...clases, ...manuales];
 
   coordinacionPrincipal.value = coordinacion;
+  coordinacionGeneracion.value = coordinacion;
+  filtroCoordinacion.value = coordinacion;
   llenarCarreras(coordinacionPrincipal, carreraPrincipal);
+  llenarCarreras(coordinacionGeneracion, carreraGeneracion);
+  llenarCarreras(filtroCoordinacion, filtroCarrera);
   carreraPrincipal.value = carrera;
+  carreraGeneracion.value = carrera;
+  filtroCarrera.value = carrera;
+  turnoGeneracion.value = turnoAdjunta.value;
+  turnoPrincipal.value = turnoAdjunta.value;
+  filtroTurno.value = turnoAdjunta.value;
+  llenarPeriodosPrincipal();
 
-  estadoCsvUpload.textContent = `CSV cargado correctamente: ${archivo.name}`;
+  estadoCsvUpload.textContent = archivo.name;
+  estadoImportacion.textContent = 'Importación completada correctamente.';
   renderClasesAdjuntas();
   renderResumen();
   adjuntarClasesForm.reset();
@@ -619,24 +707,28 @@ claseManualForm.addEventListener('submit', (event) => {
   agregarClaseManual();
 });
 
+cambiarClaseForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  cambiarClaseExistente();
+});
+
 verHorarioFiltrado.addEventListener('click', verHorarioConFiltros);
 
 reiniciarHorarios.addEventListener('click', () => {
   estado.horariosGenerados = {};
-  estado.clasesPorCarrera = {};
   estado.vistaActual = null;
-  listaHorarios.innerHTML = '<li><span>Horarios reiniciados. La configuración se mantiene.</span></li>';
+  listaHorarios.innerHTML = '<li><span>Horario reiniciado sin borrar la configuración.</span></li>';
   exportarHorarioCsv.disabled = true;
-  renderClasesAdjuntas();
+  estadoGeneracion.textContent = 'Horario reiniciado sin borrar la configuración.';
+  renderTablaHorario(null);
   renderResumen();
 });
 
 descargarPlantillaCsv.addEventListener('click', () => {
   const plantilla =
-    'clase,año,credito,categoria,compartida,tipo\n' +
-    'Cálculo I,1,4,Matemática,No,Aula\n' +
-    'Programación I,1,5,Programación,No,Laboratorio\n' +
-    'Física General,2,4,Ciencias,Sí,Taller';
+    'clase,creditos,compartida,anio,categoria,tipo\n' +
+    'Taller de Diseño,2,No compartida,1,Tecnología,Taller\n' +
+    'Identidad Nacional,1,Compartida,1,Ciencias Básicas,Aula';
   descargarCSV('plantilla_clases.csv', plantilla);
 });
 
@@ -648,19 +740,17 @@ exportarHorarioCsv.addEventListener('click', () => {
       const claseOriginal = (estado.clasesPorCarrera[claveCarrera(estado.vistaActual.coordinacion, estado.vistaActual.carrera)] || []).find(
         (item) => item.clase === bloque.clase && item.anio === anio
       );
-      filas.push(
-        [
-          bloque.clase,
-          anio,
-          bloque.creditos,
-          bloque.categorias,
-          claseOriginal?.compartida || 'No',
-          bloque.tipo || claseOriginal?.tipo || 'Aula',
-          bloque.dia,
-          bloque.inicio,
-          bloque.fin,
-        ].join(',')
-      );
+      filas.push([
+        bloque.clase,
+        anio,
+        bloque.creditos,
+        bloque.categorias,
+        claseOriginal?.compartida || 'No',
+        bloque.tipo || claseOriginal?.tipo || 'Aula',
+        bloque.dia,
+        bloque.inicio,
+        bloque.fin,
+      ].join(','));
     });
   });
   descargarCSV(`horario_${estado.vistaActual.carrera}_${estado.vistaActual.turno}_${estado.vistaActual.periodo}.csv`, filas.join('\n'));
