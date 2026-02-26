@@ -9,7 +9,7 @@
   <body>
     <header class="hero">
       <h1>Configuración académica de horarios</h1>
-      <p>Ahora puedes adjuntar el CSV de clases por carrera y generar horarios automáticamente.</p>
+      <p>Genera y gestiona horarios por coordinación, carrera, turno, periodo y año.</p>
     </header>
 
     <main class="layout">
@@ -18,10 +18,35 @@
         <button class="tab-btn" type="button" data-tab="configuracion">Configuración</button>
       </nav>
 
+      <section class="card">
+        <h2>Selección activa de la app</h2>
+        <p class="hint">Esta selección se usa para la generación automática y para agregar clases manualmente.</p>
+        <div class="grid-3">
+          <label>
+            Coordinación
+            <select id="coordinacionPrincipal" required>
+              <option value="">Selecciona una coordinación</option>
+            </select>
+          </label>
+          <label>
+            Carrera
+            <select id="carreraPrincipal" required>
+              <option value="">Selecciona una carrera</option>
+            </select>
+          </label>
+          <label>
+            Turno
+            <select id="turnoPrincipal" required>
+              <option value="">Selecciona un turno</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
       <section id="tab-principal" class="tab-panel active">
         <section class="card">
           <h2>1. Adjuntar clases por carrera</h2>
-          <p class="hint">Sube un CSV por cada carrera. El archivo queda asociado a coordinación + carrera y se usa para generar automáticamente el horario.</p>
+          <p class="hint">Sube un CSV por cada carrera. El archivo queda asociado a coordinación + carrera.</p>
           <button type="button" id="descargarPlantillaCsv">Descargar plantilla CSV</button>
           <form id="adjuntarClasesForm" class="stacked-form">
             <div class="grid-2">
@@ -49,36 +74,77 @@
         </section>
 
         <section class="card">
-          <h2>2. Generar horario</h2>
-          <p class="hint">Selecciona una carrera que ya tenga clases adjuntas y un turno configurado.</p>
+          <h2>2. Generación automática por carrera</h2>
+          <p class="hint">Usa la selección activa (coordinación/carrera/turno) y selecciona el periodo.</p>
           <form id="generarHorarioForm" class="stacked-form">
-            <div class="grid-3">
-              <label>
-                Coordinación
-                <select id="coordinacionPrincipal" required>
-                  <option value="">Selecciona una coordinación</option>
-                </select>
-              </label>
-              <label>
-                Carrera
-                <select id="carreraPrincipal" required>
-                  <option value="">Selecciona una carrera</option>
-                </select>
-              </label>
-              <label>
-                Turno
-                <select id="turnoPrincipal" required>
-                  <option value="">Selecciona un turno</option>
-                </select>
-              </label>
-            </div>
+            <label>
+              Periodo
+              <select id="periodoPrincipal" required>
+                <option value="">Selecciona un periodo</option>
+              </select>
+            </label>
             <button type="submit">Generar horarios por año</button>
           </form>
         </section>
 
         <section class="card">
-          <h2>Resultado de generación</h2>
-          <button type="button" id="exportarHorarioCsv" disabled>Exportar horario generado (CSV)</button>
+          <h2>3. Agregar clase manual</h2>
+          <p class="hint">Se agregará a la coordinación/carrera/turno seleccionados arriba.</p>
+          <form id="claseManualForm" class="stacked-form">
+            <div class="grid-3">
+              <label>
+                Año
+                <select id="anioManual" required>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </label>
+              <label>
+                Clase
+                <input type="text" id="claseManual" required placeholder="Ej: Álgebra Lineal" />
+              </label>
+              <label>
+                Créditos
+                <input type="number" id="creditosManual" min="1" value="4" required />
+              </label>
+            </div>
+            <label>
+              Categorías
+              <input type="text" id="categoriasManual" placeholder="Ej: Matemática" value="General" />
+            </label>
+            <button type="submit">Agregar clase manual</button>
+          </form>
+          <p id="estadoClaseManual" class="hint"></p>
+        </section>
+
+        <section class="card">
+          <h2>4. Vista por coordinación - carrera - turno</h2>
+          <p class="hint">Puedes usar estos filtros para revisar cualquier horario generado.</p>
+          <div class="grid-3">
+            <label>
+              Coordinación
+              <select id="filtroCoordinacion">
+                <option value="">Selecciona una coordinación</option>
+              </select>
+            </label>
+            <label>
+              Carrera
+              <select id="filtroCarrera">
+                <option value="">Selecciona una carrera</option>
+              </select>
+            </label>
+            <label>
+              Turno
+              <select id="filtroTurno">
+                <option value="">Selecciona un turno</option>
+              </select>
+            </label>
+          </div>
+          <button type="button" id="verHorarioFiltrado">Ver horario filtrado</button>
+          <button type="button" id="exportarHorarioCsv" disabled>Exportar horario mostrado (CSV)</button>
           <ul id="listaHorarios" class="simple-list"></ul>
         </section>
       </section>
@@ -104,7 +170,7 @@
           <h2>2. Configuración de docentes y categorías</h2>
           <form id="categoriaForm" class="stacked-form">
             <label>
-              Nueva categoría (independiente)
+              Nueva categoría
               <input type="text" id="nombreCategoria" required placeholder="Ej: Matemática" />
             </label>
             <button type="submit">Registrar categoría</button>
@@ -119,7 +185,7 @@
               <input type="text" id="nombreDocente" required placeholder="Ej: Ana López" />
             </label>
             <label>
-              Categorías del docente (puede elegir varias)
+              Categorías del docente
               <select id="categoriasDocente" multiple required></select>
             </label>
             <button type="submit">Registrar docente</button>
@@ -129,10 +195,6 @@
 
         <section class="card">
           <h2>3. Configuración de turno y reglas horarias</h2>
-          <p class="hint">
-            El turno se guarda como una configuración integrada: prioridad por día, hora de inicio,
-            minutos/créditos por bloque, receso y almuerzo.
-          </p>
           <form id="turnoForm" class="stacked-form">
             <div class="grid-2">
               <label>
@@ -140,32 +202,32 @@
                 <input type="text" id="nombreTurno" required placeholder="Ej: Diurno" />
               </label>
               <label>
-                Días del turno (separados por coma)
+                Días habilitados (separados por coma)
                 <input type="text" id="diasTurno" required placeholder="Lunes,Martes,Miércoles,Jueves,Viernes" />
               </label>
             </div>
             <label>
-              Prioridad por día (formato Día:prioridad, Día:prioridad)
-              <input type="text" id="prioridadDias" required placeholder="Lunes:1,Martes:2,Miércoles:3" />
+              Prioridad de días (formato Día:prioridad). Si vacío usa: Lunes:1,Martes:2,Miércoles:3,Jueves:4,Viernes:5
+              <input type="text" id="prioridadDias" placeholder="Lunes:1,Martes:2,Miércoles:3" />
             </label>
             <div class="grid-3">
               <label>
-                Hora de inicio
-                <input type="time" id="horaInicio" required />
+                Hora inicio de clases
+                <input type="time" id="horaInicio" value="08:00" required />
               </label>
               <label>
                 Minutos por bloque
-                <input type="number" id="minutosBloque" min="1" required />
+                <input type="number" id="minutosBloque" min="1" value="50" required />
               </label>
               <label>
                 Créditos por bloque
-                <input type="number" id="creditosBloque" min="1" required />
+                <input type="number" id="creditosBloque" min="1" value="1" required />
               </label>
             </div>
             <div class="grid-2">
               <label>
                 Hora de receso
-                <input type="time" id="horaReceso" required />
+                <input type="time" id="horaReceso" value="10:00" required />
               </label>
               <label>
                 Duración receso (min)
@@ -175,7 +237,7 @@
             <div class="grid-2">
               <label>
                 Hora de almuerzo
-                <input type="time" id="horaAlmuerzo" required />
+                <input type="time" id="horaAlmuerzo" value="12:00" required />
               </label>
               <label>
                 Duración almuerzo (min)
@@ -185,6 +247,32 @@
             <button type="submit">Guardar turno integrado</button>
           </form>
           <ul id="listaTurnos" class="simple-list"></ul>
+        </section>
+
+        <section class="card">
+          <h2>4. Configuración de periodos por turno</h2>
+          <form id="periodoForm" class="stacked-form">
+            <div class="grid-2">
+              <label>
+                Turno
+                <select id="turnoPeriodo" required>
+                  <option value="">Selecciona un turno</option>
+                </select>
+              </label>
+              <label>
+                Nuevo periodo
+                <input type="text" id="nombrePeriodo" required placeholder="Ej: 2025-1" />
+              </label>
+            </div>
+            <button type="submit">Agregar periodo</button>
+          </form>
+          <ul id="listaPeriodos" class="simple-list"></ul>
+        </section>
+
+        <section class="card">
+          <h2>5. Mantenimiento</h2>
+          <p class="hint">La configuración no se borra; solo se reinician horarios y clases cargadas.</p>
+          <button type="button" id="reiniciarHorarios">Reiniciar solo horarios</button>
         </section>
       </section>
 
