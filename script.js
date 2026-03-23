@@ -3,11 +3,7 @@ const branchesContainer = document.getElementById('branches');
 const sparklesContainer = document.getElementById('sparkles');
 const notesContainer = document.getElementById('notes');
 
-const LOVE_NOTES = [
-  'Te amo hoy, mañana y siempre 💛',
-  'Eres mi lugar favorito en el mundo ✨',
-  'Contigo todo se siente bonito 🌷',
-];
+const LOVE_NOTES = [];
 
 const BRANCHES = [
   { left: 178, bottom: 138, rotate: -34, length: 172, delay: 0.6 },
