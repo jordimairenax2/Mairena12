@@ -25,10 +25,10 @@ body {
 }
 
 .scene {
-  width: min(960px, 95vw);
+  width: min(900px, 94vw);
   background: var(--bg);
   border-radius: 24px;
-  padding: 1.2rem;
+  padding: 1rem;
   box-shadow: 0 20px 42px rgba(102, 63, 11, 0.2);
   border: 1px solid #f6d98c;
 }
@@ -49,7 +49,7 @@ h1 {
 
 .world {
   position: relative;
-  height: 560px;
+  height: 520px;
   border-radius: 18px;
   overflow: hidden;
   background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 40%, var(--sky-3) 74%, var(--sky-4) 100%);
@@ -120,7 +120,7 @@ h1 {
 .tree {
   position: absolute;
   left: 50%;
-  bottom: 90px;
+  bottom: 78px;
   width: 360px;
   height: 360px;
   transform: translateX(-50%);
@@ -215,7 +215,7 @@ h1 {
 .couple {
   position: absolute;
   left: 50%;
-  bottom: 35px;
+  bottom: 28px;
   transform: translateX(-50%);
   display: flex;
   align-items: flex-end;
@@ -295,7 +295,7 @@ h1 {
 .love-note {
   position: absolute;
   left: 50%;
-  bottom: 162px;
+  bottom: 146px;
   transform: translateX(-50%);
   margin: 0;
   z-index: 5;
@@ -433,11 +433,39 @@ h1 {
 }
 
 @media (max-width: 700px) {
+  .scene {
+    width: min(390px, 95vw);
+    padding: 0.75rem;
+    border-radius: 18px;
+  }
+
+  h1 {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
   .world {
-    height: 620px;
+    height: 440px;
   }
 
   .tree {
-    transform: translateX(-50%) scale(0.88);
+    bottom: 66px;
+    transform: translateX(-50%) scale(0.72);
+  }
+
+  .love-note {
+    bottom: 124px;
+    max-width: 86%;
+    font-size: 0.86rem;
+    padding: 0.4rem 0.65rem;
+  }
+
+  .couple {
+    gap: 0.55rem;
+    transform: translateX(-50%) scale(0.9);
+    transform-origin: bottom center;
   }
 }
