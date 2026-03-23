@@ -1,6 +1,13 @@
 const flowersContainer = document.getElementById('flowers');
 const branchesContainer = document.getElementById('branches');
 const sparklesContainer = document.getElementById('sparkles');
+const notesContainer = document.getElementById('notes');
+
+const LOVE_NOTES = [
+  'Te amo hoy, mañana y siempre 💛',
+  'Eres mi lugar favorito en el mundo ✨',
+  'Contigo todo se siente bonito 🌷',
+];
 
 const BRANCHES = [
   { left: 178, bottom: 138, rotate: -34, length: 172, delay: 0.6 },
@@ -19,6 +26,7 @@ const BRANCHES = [
 ];
 
 function createBranches() {
+  if (!branchesContainer) return;
   BRANCHES.forEach((branchData) => {
     const branch = document.createElement('div');
     branch.className = 'branch';
@@ -53,6 +61,7 @@ function tulipPositionsByHeart(total = 56) {
 }
 
 function createTulips() {
+  if (!flowersContainer) return;
   const tulipPositions = tulipPositionsByHeart();
 
   tulipPositions.forEach(([left, bottom], index) => {
@@ -67,6 +76,7 @@ function createTulips() {
 }
 
 function createSparkles() {
+  if (!sparklesContainer) return;
   for (let i = 0; i < 34; i += 1) {
     const sparkle = document.createElement('div');
     sparkle.className = 'sparkle';
@@ -78,13 +88,27 @@ function createSparkles() {
   }
 }
 
+function createLoveNotes() {
+  if (!notesContainer) return;
+
+  LOVE_NOTES.forEach((text, index) => {
+    const note = document.createElement('p');
+    note.className = 'love-note-item';
+    note.style.animationDelay = `${0.2 + index * 0.2}s`;
+    note.textContent = text;
+    notesContainer.appendChild(note);
+  });
+}
+
 function createScene() {
-  branchesContainer.innerHTML = '';
-  flowersContainer.innerHTML = '';
-  sparklesContainer.innerHTML = '';
+  if (branchesContainer) branchesContainer.innerHTML = '';
+  if (flowersContainer) flowersContainer.innerHTML = '';
+  if (sparklesContainer) sparklesContainer.innerHTML = '';
+  if (notesContainer) notesContainer.innerHTML = '';
   createBranches();
   createTulips();
   createSparkles();
+  createLoveNotes();
 }
 
 window.addEventListener('load', () => {

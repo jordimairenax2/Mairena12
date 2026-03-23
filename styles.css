@@ -53,6 +53,8 @@ h1 {
 
 .subtitle {
   margin: 0;
+  font-weight: 600;
+  color: #8a3156;
 }
 
 .world {
@@ -142,6 +144,42 @@ h1 {
   padding: 0.35rem 0.7rem;
   border-radius: 12px;
   background: rgba(120, 35, 77, 0.26);
+}
+
+.love-notes {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 6;
+  display: grid;
+  gap: 0.4rem;
+  width: min(48%, 340px);
+}
+
+.love-note-item {
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: 10px;
+  color: #fff7fa;
+  background: rgba(116, 29, 74, 0.38);
+  border: 1px solid rgba(255, 237, 244, 0.35);
+  font-weight: 700;
+  line-height: 1.25;
+  font-size: clamp(0.78rem, 1.6vw, 0.95rem);
+  text-shadow: 0 2px 7px rgba(54, 8, 33, 0.6);
+  animation: fadeInNote 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInNote {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .tree {
