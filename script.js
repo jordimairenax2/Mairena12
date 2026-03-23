@@ -1,21 +1,22 @@
 const flowersContainer = document.getElementById('flowers');
 const sparklesContainer = document.getElementById('sparkles');
 
-const flowerPositions = [
-  [72, 168], [96, 205], [122, 235], [152, 255], [184, 266],
-  [214, 255], [243, 235], [268, 205], [292, 170], [104, 166],
-  [134, 192], [165, 206], [197, 206], [228, 192], [258, 166],
-  [164, 292], [194, 290], [136, 276], [222, 276], [177, 320],
-  [86, 236], [278, 236], [72, 198], [292, 198], [177, 236],
+const tulipPositions = [
+  [72, 168], [91, 199], [114, 226], [142, 250], [174, 265], [206, 265],
+  [237, 250], [264, 226], [286, 199], [305, 168], [100, 164], [126, 189],
+  [154, 205], [183, 212], [212, 205], [240, 189], [266, 164], [122, 273],
+  [152, 289], [183, 304], [214, 289], [244, 273], [183, 336], [82, 236],
+  [284, 236], [72, 205], [294, 205], [183, 238], [143, 235], [223, 235],
 ];
 
-flowerPositions.forEach(([left, bottom], index) => {
-  const flower = document.createElement('div');
-  flower.className = 'flower';
-  flower.style.left = `${left}px`;
-  flower.style.bottom = `${bottom}px`;
-  flower.style.animationDelay = `${(index % 6) * 0.25}s`;
-  flowersContainer.appendChild(flower);
+tulipPositions.forEach(([left, bottom], index) => {
+  const tulip = document.createElement('div');
+  tulip.className = 'tulip';
+  tulip.style.left = `${left}px`;
+  tulip.style.bottom = `${bottom}px`;
+  tulip.style.animationDelay = `${1.6 + index * 0.08}s`;
+  tulip.innerHTML = '<span class="stem"></span><span class="bud"><span class="petal"></span></span>';
+  flowersContainer.appendChild(tulip);
 });
 
 for (let i = 0; i < 28; i += 1) {
