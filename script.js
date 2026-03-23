@@ -1,49 +1,29 @@
-const tree = document.getElementById('tree');
+const flowersContainer = document.getElementById('flowers');
+const sparklesContainer = document.getElementById('sparkles');
 
-function makeBranch({ left, bottom, height, angle }) {
-  const branch = document.createElement('div');
-  branch.className = 'branch';
-  branch.style.left = `${left}px`;
-  branch.style.bottom = `${bottom}px`;
-  branch.style.height = `${height}px`;
-  branch.style.transform = `rotate(${angle}deg)`;
-  tree.appendChild(branch);
-}
+const flowerPositions = [
+  [72, 168], [96, 205], [122, 235], [152, 255], [184, 266],
+  [214, 255], [243, 235], [268, 205], [292, 170], [104, 166],
+  [134, 192], [165, 206], [197, 206], [228, 192], [258, 166],
+  [164, 292], [194, 290], [136, 276], [222, 276], [177, 320],
+  [86, 236], [278, 236], [72, 198], [292, 198], [177, 236],
+];
 
-function makeFlower({ left, bottom, delay }) {
+flowerPositions.forEach(([left, bottom], index) => {
   const flower = document.createElement('div');
   flower.className = 'flower';
   flower.style.left = `${left}px`;
   flower.style.bottom = `${bottom}px`;
-  flower.style.animationDelay = `${delay}s`;
-  tree.appendChild(flower);
+  flower.style.animationDelay = `${(index % 6) * 0.25}s`;
+  flowersContainer.appendChild(flower);
+});
+
+for (let i = 0; i < 28; i += 1) {
+  const sparkle = document.createElement('div');
+  sparkle.className = 'sparkle';
+  sparkle.style.left = `${Math.random() * 95}%`;
+  sparkle.style.top = `${Math.random() * 74 + 8}%`;
+  sparkle.style.animationDelay = `${Math.random() * 3.2}s`;
+  sparkle.style.animationDuration = `${2.8 + Math.random() * 2.2}s`;
+  sparklesContainer.appendChild(sparkle);
 }
-
-function buildTree() {
-  const trunk = document.createElement('div');
-  trunk.className = 'trunk';
-  tree.appendChild(trunk);
-
-  const branches = [
-    { left: 150, bottom: 110, height: 80, angle: -48 },
-    { left: 178, bottom: 120, height: 90, angle: 40 },
-    { left: 155, bottom: 160, height: 70, angle: -20 },
-    { left: 175, bottom: 165, height: 70, angle: 22 },
-    { left: 165, bottom: 210, height: 56, angle: -2 },
-  ];
-
-  branches.forEach(makeBranch);
-
-  const flowers = [
-    [92, 208], [115, 254], [140, 286], [175, 296], [205, 278],
-    [234, 246], [255, 204], [76, 178], [105, 148], [240, 152],
-    [196, 226], [152, 238], [168, 256], [122, 220], [218, 214],
-    [150, 190], [183, 182], [132, 174], [210, 172], [165, 146],
-  ];
-
-  flowers.forEach(([left, bottom], index) => {
-    makeFlower({ left, bottom, delay: (index % 5) * 0.4 });
-  });
-}
-
-buildTree();
