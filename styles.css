@@ -1,8 +1,8 @@
 :root {
-  --sky-1: #ffb07f;
-  --sky-2: #ff7c7f;
-  --sky-3: #8f58c4;
-  --sky-4: #3c2d72;
+  --sky-1: #ffd2a6;
+  --sky-2: #ff9a8a;
+  --sky-3: #a167c9;
+  --sky-4: #33285f;
   --bg: #fffdf4;
   --bark: #8a5630;
   --heart-bark: #7a4630;
@@ -19,7 +19,7 @@ body {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 14% 7%, #ffd9be 0%, #ff9b8d 42%, #4b357f 100%);
+  background: radial-gradient(circle at 14% 7%, #ffe4c7 0%, #ffab92 42%, #4a367f 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text);
 }
@@ -38,18 +38,9 @@ body {
   margin-bottom: 1rem;
 }
 
-.tag {
-  display: inline-block;
-  margin: 0;
-  padding: 0.3rem 0.8rem;
-  border-radius: 999px;
-  background: #fff2b8;
-  font-size: 0.9rem;
-}
-
 h1 {
-  margin: 0.5rem 0 0.2rem;
-  font-size: clamp(1.9rem, 4vw, 3rem);
+  margin: 0.35rem 0 0.2rem;
+  font-size: clamp(1.45rem, 3vw, 2.2rem);
 }
 
 .subtitle {
@@ -61,7 +52,7 @@ h1 {
   height: 560px;
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 42%, var(--sky-3) 76%, var(--sky-4) 100%);
+  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 40%, var(--sky-3) 74%, var(--sky-4) 100%);
 }
 
 .moon {
@@ -81,9 +72,9 @@ h1 {
   width: 82px;
   height: 82px;
   border-radius: 50%;
-  left: 18px;
+  left: 20px;
   top: 2px;
-  background: rgba(255, 130, 124, 0.8);
+  background: rgba(255, 132, 128, 0.82);
 }
 
 .heart-cloud {
@@ -145,7 +136,7 @@ h1 {
   border-radius: 20px;
   background: linear-gradient(180deg, #a56a3d, var(--bark));
   transform-origin: bottom center;
-  animation: growTrunk 1.9s ease-out forwards;
+  animation: growTrunk 2.2s ease-out forwards;
 }
 
 .branches,
@@ -171,7 +162,7 @@ h1 {
   height: 38px;
   transform-origin: bottom center;
   opacity: 0;
-  animation: bloom 0.8s ease-out forwards;
+  animation: bloom 0.85s ease-out forwards;
 }
 
 .tulip .stem {
@@ -199,14 +190,14 @@ h1 {
   position: absolute;
   width: 11px;
   height: 14px;
-  background: linear-gradient(180deg, #ff9fd4 0%, #f261aa 100%);
+  background: linear-gradient(180deg, #ffe98a 0%, #ffc72f 100%);
   border-radius: 12px 12px 5px 5px;
 }
 
 .tulip .petal {
   left: 3.3px;
   top: 1px;
-  box-shadow: 0 0 11px rgba(255, 143, 205, 0.52);
+  box-shadow: 0 0 11px rgba(255, 218, 108, 0.52);
 }
 
 .tulip .bud::before {
