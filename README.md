@@ -1,20 +1,17 @@
-# Flores Amarillas para Dedicar 🌼
+# Página romántica de flores amarillas 💛
 
-Sitio web personalizado creado con **HTML, CSS y JavaScript** para dedicar un detalle romántico con un árbol de flores amarillas animado.
+Proyecto web hecho con **HTML + CSS + JavaScript** con temática romántica.
 
-## Contenido del sitio
+## Incluye
 
-- Mensaje principal de amor para compartir.
-- Botón con link para enviar flores amarillas por WhatsApp.
-- Árbol de flores amarillas con animación CSS + JS.
-- Sección SEO con hashtags y keywords relacionadas.
+- Árbol central con flores amarillas animadas.
+- Ramas en forma de corazón.
+- Dos muñequitos con los nombres **Yaloa** y **Jordi**.
+- Un pollito animado.
+- Brillos y elementos decorativos para dar un estilo romántico.
 
-## Uso
+## Cómo usar
 
 1. Abre `index.html` en tu navegador.
-2. Personaliza el texto si deseas dedicarlo a alguien especial.
-3. Comparte el enlace o publica el sitio online.
-
-## Hashtags
-
-`#love #floresamarillas #Amor #teamo #regalospersonalizados`
+2. Si quieres personalizar colores, nombres o texto, edita `index.html` y `styles.css`.
+3. Sube los archivos a cualquier hosting estático para compartir tu detalle.
