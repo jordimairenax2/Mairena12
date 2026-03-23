@@ -3,15 +3,19 @@ const branchesContainer = document.getElementById('branches');
 const sparklesContainer = document.getElementById('sparkles');
 
 const BRANCHES = [
-  { left: 178, bottom: 140, rotate: -32, length: 168, delay: 0.55 },
-  { left: 178, bottom: 140, rotate: 32, length: 168, delay: 0.7 },
-  { left: 160, bottom: 172, rotate: -48, length: 132, delay: 0.85 },
-  { left: 196, bottom: 172, rotate: 48, length: 132, delay: 0.95 },
-  { left: 165, bottom: 178, rotate: -13, length: 120, delay: 1.05 },
-  { left: 191, bottom: 178, rotate: 13, length: 120, delay: 1.15 },
-  { left: 182, bottom: 205, rotate: 0, length: 120, delay: 1.25 },
-  { left: 145, bottom: 210, rotate: -61, length: 92, delay: 1.35 },
-  { left: 215, bottom: 210, rotate: 61, length: 92, delay: 1.45 },
+  { left: 178, bottom: 138, rotate: -34, length: 172, delay: 0.6 },
+  { left: 178, bottom: 138, rotate: 34, length: 172, delay: 0.72 },
+  { left: 160, bottom: 168, rotate: -50, length: 136, delay: 0.84 },
+  { left: 196, bottom: 168, rotate: 50, length: 136, delay: 0.94 },
+  { left: 166, bottom: 178, rotate: -20, length: 124, delay: 1.04 },
+  { left: 190, bottom: 178, rotate: 20, length: 124, delay: 1.12 },
+  { left: 182, bottom: 204, rotate: 0, length: 124, delay: 1.2 },
+  { left: 146, bottom: 206, rotate: -62, length: 96, delay: 1.3 },
+  { left: 214, bottom: 206, rotate: 62, length: 96, delay: 1.38 },
+  { left: 157, bottom: 218, rotate: -74, length: 82, delay: 1.46 },
+  { left: 203, bottom: 218, rotate: 74, length: 82, delay: 1.54 },
+  { left: 172, bottom: 222, rotate: -10, length: 78, delay: 1.6 },
+  { left: 188, bottom: 222, rotate: 10, length: 78, delay: 1.66 },
 ];
 
 function createBranches() {
@@ -27,7 +31,7 @@ function createBranches() {
   });
 }
 
-function tulipPositionsByHeart(total = 44) {
+function tulipPositionsByHeart(total = 56) {
   const points = [];
 
   for (let i = 0; i < total; i += 1) {
@@ -56,7 +60,7 @@ function createTulips() {
     tulip.className = 'tulip';
     tulip.style.left = `${left}px`;
     tulip.style.bottom = `${bottom}px`;
-    tulip.style.animationDelay = `${1.45 + index * 0.055}s`;
+    tulip.style.animationDelay = `${1.75 + index * 0.05}s`;
     tulip.innerHTML = '<span class="stem"></span><span class="bud"><span class="petal"></span></span>';
     flowersContainer.appendChild(tulip);
   });
@@ -74,6 +78,15 @@ function createSparkles() {
   }
 }
 
-createBranches();
-createTulips();
-createSparkles();
+function createScene() {
+  branchesContainer.innerHTML = '';
+  flowersContainer.innerHTML = '';
+  sparklesContainer.innerHTML = '';
+  createBranches();
+  createTulips();
+  createSparkles();
+}
+
+window.addEventListener('load', () => {
+  requestAnimationFrame(createScene);
+});
